@@ -1,0 +1,49 @@
+{
+  "manifest_version": 3,
+  "name": "dota2.ru_ext",
+  "version": "3.0.0",
+  "description": "dota2.ru ext",
+  "permissions": [
+    "scripting",
+    "storage"
+  ],
+  "host_permissions": [
+    "https://dota2.ru/*",
+    "http://dota2.ru/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["https://dota2.ru/forum/threads/*.*/*", "http://dota2.ru/forum/threads/*.*/*"],
+      "js": ["pages/forum-thread.js"]
+    },
+    {
+      "matches": ["https://dota2.ru/forum/threads/*.*", "http://dota2.ru/forum/threads/*.*"],
+      "js": ["pages/forum-thread.js"]
+    },
+    {
+      "matches": ["https://dota2.ru/forum/settings/*", "http://dota2.ru/forum/settings/*"],
+      "js": ["pages/settings.js"]
+    },
+    {
+      "matches": ["https://dota2.ru/forum/settings/*", "http://dota2.ru/forum/settings/*"],
+      "js": ["pages/settings-extension.js"]
+    },
+    {
+      "matches": ["https://dota2.ru/*", "http://dota2.ru/*"],
+      "js": ["content.js"]
+    },
+    {
+      "matches": ["https://dota2.ru/", "http://dota2.ru/"],
+      "js": ["pages/index.js"]
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["style/main.css"],
+      "matches": ["<all_urls>"]
+    }
+  ],
+  "icons": {
+    "16": "icons/16.png"
+  }
+} 
