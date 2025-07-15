@@ -1,16 +1,33 @@
-declare let __webpack_public_path__: string;
-declare const Utils: any;
-__webpack_public_path__ = (window as any).chrome.runtime.getURL('/');
-console.log('Dota2.ru Helper content script loaded');
-(window as any).chrome.storage.local.get(['oldDesign'], (result: { oldDesign?: boolean }) => {
-  if (result.oldDesign) {
-    const link = document.createElement('link');
-    link.rel = 'stylesheet';
-    link.type = 'text/css';
-    link.href = (window as any).chrome.runtime.getURL('style/main.css');
-    document.head.appendChild(link);
-    console.log('main.css подключён (oldDesign=true)');
-  } else {
-    console.log('main.css не подключён (oldDesign=false)');
-  }
-});
+import {ExtensionSettings} from "./types";
+import {initSmilesPanel, loadCss, parasite} from "./utils";
+
+const script = document.createElement('script');
+script.src = chrome.runtime.getURL('parasite.js');
+script.onload = () => {
+  script.remove()
+
+
+  chrome.storage.sync.get(null, (conf: ExtensionSettings) => {
+    if (conf.oldDesign) {
+      loadCss(chrome.runtime.getURL('style/main.css'))
+    }
+
+    if (conf.newSmilePanel) {
+      parasite("newSmilesPanel", {});
+      loadCss(chrome.runtime.getURL('style/smilesPanel.css'))
+    }
+
+    window.addEventListener('message', (event) => {
+      if (event.source !== window) return;
+      const { type, message } = event.data || {};
+      if (type === "TinyMCE.init") {
+        const el = document.querySelector(message.selector);
+        initSmilesPanel(el);
+      }
+    });
+
+  });
+}
+(document.head || document.documentElement).appendChild(script);
+
+

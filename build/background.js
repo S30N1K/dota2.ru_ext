@@ -1,0 +1,2 @@
+(()=>{"use strict";window.chrome.runtime.onInstalled.addListener(()=>{window.chrome.storage.sync.get(["oldDesign"],e=>{void 0!==e.oldDesign&&window.chrome.storage.local.set({oldDesign:e.oldDesign})})}),window.chrome.storage.onChanged.addListener((e,o)=>{"sync"===o&&e.oldDesign&&window.chrome.storage.local.set({oldDesign:e.oldDesign.newValue})})})();
+//# sourceMappingURL=background.js.map

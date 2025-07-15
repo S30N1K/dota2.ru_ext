@@ -6,21 +6,21 @@
         <div class="settings-page__block-splitter">
           <div class="settings-page__block-splitter--item">Использовать старое оформление</div>
           <div class="settings-page__block-splitter--item">
-            <input type="checkbox" v-model="oldDesign" @change="saveSettings" id="oldDesign">
+            <input type="checkbox" v-model="oldDesign" @change="saveSettings" id="oldDesign" :disabled="disabled.includes('oldDesign')">
           </div>
         </div>
         <hr>
         <div class="settings-page__block-splitter">
           <div class="settings-page__block-splitter--item">Новая панель со смайлами</div>
           <div class="settings-page__block-splitter--item">
-            <input type="checkbox" v-model="newSmilePanel" @change="saveSettings" id="newSmilePanel">
+            <input type="checkbox" v-model="newSmilePanel" @change="saveSettings" id="newSmilePanel" :disabled="disabled.includes('newSmilePanel')">
           </div>
         </div>
         <hr>
         <div class="settings-page__block-splitter">
           <div class="settings-page__block-splitter--item">Вставка изображений по Ctrl+V</div>
           <div class="settings-page__block-splitter--item">
-            <input type="checkbox" v-model="pasteImage" @change="saveSettings" id="pasteImage">
+            <input type="checkbox" v-model="pasteImage" @change="saveSettings" id="pasteImage" :disabled="disabled.includes('pasteImage')">
           </div>
         </div>
         <div style="margin-bottom: 10px; margin-left: 20px; font-size: 13px;" v-if="pasteImage">
@@ -28,7 +28,8 @@
           <b>Инструкция</b><br>
           Идем сюда <a href="https://imgbb.com/" target="_blank">https://imgbb.com/</a><br>
           1) Регистрируемся, или заходим под своей учеткой, если уже зарегистрированы.<br>
-          2) как авторизовались, идем сюда <a href="https://api.imgbb.com/" target="_blank">https://api.imgbb.com/</a><br>
+          2) как авторизовались, идем сюда <a href="https://api.imgbb.com/"
+                                              target="_blank">https://api.imgbb.com/</a><br>
           3) жмем кнопку вверху "GET API KEY"<br>
           4) получаем длинный ключ, копируем его.<br>
           5) вставляем его в поле ниже
@@ -42,7 +43,7 @@
         <div class="settings-page__block-splitter">
           <div class="settings-page__block-splitter--item">Звуковые оповещения при поступлении уведомлений</div>
           <div class="settings-page__block-splitter--item">
-            <input type="checkbox" v-model="soundNotifications" @change="saveSettings" id="soundNotifications">
+            <input type="checkbox" v-model="soundNotifications" @change="saveSettings" id="soundNotifications" :disabled="disabled.includes('soundNotifications')">
           </div>
         </div>
         <div v-if="soundNotifications" style="margin-bottom: 10px; margin-left: 20px; font-size: 13px;">
@@ -62,27 +63,38 @@
         </div>
         <hr>
         <div class="settings-page__block-splitter">
-          <div class="settings-page__block-splitter--item">Вывод последней страницы уведомлений при наведении на значок уведомлений</div>
+          <div class="settings-page__block-splitter--item">Вывод последней страницы уведомлений при наведении на значок
+            уведомлений
+          </div>
           <div class="settings-page__block-splitter--item">
-            <input type="checkbox" v-model="hoverLastNotifications" @change="saveSettings" id="hoverLastNotifications">
+            <input type="checkbox" v-model="hoverLastNotifications" @change="saveSettings" id="hoverLastNotifications" :disabled="disabled.includes('hoverLastNotifications')">
           </div>
         </div>
         <hr>
         <div class="settings-page__block-splitter">
           <div class="settings-page__block-splitter--item">Отображение оценок на странице уведомлений</div>
           <div class="settings-page__block-splitter--item">
-            <input type="checkbox" v-model="showNotificationRatings" @change="saveSettings" id="showNotificationRatings">
+            <input type="checkbox" v-model="showNotificationRatings" @change="saveSettings"
+                   id="showNotificationRatings" :disabled="disabled.includes('showNotificationRatings')">
           </div>
         </div>
         <hr>
         <div class="settings-page__block-splitter">
           <div class="settings-page__block-splitter--item">Улучшенная выгрузка аватаров</div>
           <div class="settings-page__block-splitter--item">
-            <input type="checkbox" v-model="betterAvatarExport" @change="saveSettings" id="betterAvatarExport">
+            <input type="checkbox" v-model="betterAvatarExport" @change="saveSettings" id="betterAvatarExport" :disabled="disabled.includes('betterAvatarExport')">
           </div>
         </div>
         <div style="margin-bottom: 10px; margin-left: 20px; font-size: 13px;">
-          Улучшает выгрузку аватаров. Частично снимает ограничение на выгрузку. Улучшенный выбор кадра. Можно выбирать кадр из гиф, если нет премиума. Гифки теперь тоже можно обрезать.
+          Улучшает выгрузку аватаров. Частично снимает ограничение на выгрузку. Улучшенный выбор кадра. Можно выбирать
+          кадр из гиф, если нет премиума. Гифки теперь тоже можно обрезать.
+        </div>
+      </div>
+      <hr>
+      <div class="bg-main-block settings-page__block">
+        <p class="settings-page__block-title">Исходник</p>
+        <div class="settings-page__block-splitter--item">
+          Доступен тут: <a href="https://github.com/S30N1K/dota2.ru_ext" target="_blank">https://github.com/S30N1K/dota2.ru_ext</a>
         </div>
       </div>
     </div>
@@ -90,15 +102,24 @@
     <div class="settings-page__column">
       <div class="bg-main-block settings-page__block">
         <div id="forum_nodes" class="bg-main-block settings-page__block">
-          <p class="settings-page__block-title">Настройка выводимых тем</p>
-          <p style="font-size: 13px;">Снимите галочку с тех разделов, темы из которых вы не хотите видеть в отображении на главной странице сайта</p>
+          <p class="settings-page__block-title">
+            Настройка выводимых тем
+            <input type="checkbox" v-model="listTopicSections" @change="saveSettings" id="listTopicSections" :disabled="disabled.includes('listTopicSections')">
+          </p>
+          <p style="font-size: 13px;">Снимите галочку с тех разделов, темы из которых вы не хотите видеть в отображении
+            на главной странице сайта</p>
           <hr>
           <label class="settings-page__block-splitter" v-for="e of ignoredSections" :key="e.id">
             <span class="settings-page__block-splitter--item">{{ e.name }}</span>
-             <span class="settings-page__block-splitter--item">
+            <span class="settings-page__block-splitter--item">
                <input type="checkbox"
                       :checked="ignoredSectionIds.includes(Number(e.id))"
-                      @change="toggleIgnoredSection(Number(e.id))">
+                      @change="toggleIgnoredSection(Number(e.id))"
+                      :id="'ignoredSection_' + e.id"
+                      :value="Number(e.id)"
+                      :aria-checked="ignoredSectionIds.includes(Number(e.id))"
+                      :disabled="!listTopicSections"
+               >
              </span>
           </label>
         </div>
@@ -108,7 +129,10 @@
 </template>
 <script lang="ts" setup>
 import {ref, watch, onMounted, computed} from 'vue';
-import {IForumSections, pareForumSections} from "../utils";
+import {parasite, pareForumSections} from "../utils";
+import { saveSettings as saveExtSettings, loadSettings as loadExtSettings } from '../settings';
+import {IForumSections, ExtensionSettings} from "../types";
+
 const oldDesign = ref(false);
 const newSmilePanel = ref(false);
 const pasteImage = ref(false);
@@ -121,14 +145,17 @@ const hoverLastNotifications = ref(false);
 const showNotificationRatings = ref(false);
 const betterAvatarExport = ref(false);
 const ignoredSections = ref<IForumSections[]>([]);
+const listTopicSections = ref(false);
 const ignoredSectionIds = ref<number[]>([]);
-declare const Utils: { notify(msg: string): void; };
-onMounted(async() => {
+
+const disabled = ref<string[]>(["pasteImage", "soundNotifications", "hoverLastNotifications", "showNotificationRatings", "betterAvatarExport"]);
+
+onMounted(async () => {
   ignoredSections.value = await pareForumSections()
 })
+
 function saveSettings() {
-  const normalizedIgnoredSectionIds = ignoredSectionIds.value.map(Number);
-  const settings = {
+  const settings: ExtensionSettings = {
     oldDesign: oldDesign.value,
     newSmilePanel: newSmilePanel.value,
     pasteImage: pasteImage.value,
@@ -139,38 +166,30 @@ function saveSettings() {
     hoverLastNotifications: hoverLastNotifications.value,
     showNotificationRatings: showNotificationRatings.value,
     betterAvatarExport: betterAvatarExport.value,
-    ignoredSectionIds: normalizedIgnoredSectionIds,
+    listTopicSections: listTopicSections.value,
+    ignoredSectionIds: ignoredSectionIds.value.map(Number),
   };
-  chrome.storage.sync.set(settings, () => {});
+  saveExtSettings(settings);
+  parasite("NOTIFY", "Настройки расширения сохранены");
 }
+
 function loadSettings() {
-  chrome.storage.sync.get([
-    'oldDesign',
-    'newSmilePanel',
-    'pasteImage',
-    'imgbbToken',
-    'soundNotifications',
-    'soundType',
-    'customSoundName',
-    'hoverLastNotifications',
-    'showNotificationRatings',
-    'betterAvatarExport',
-    'ignoredSectionIds',
-  ], (result: any) => {
-    oldDesign.value = result.oldDesign ?? false;
-    newSmilePanel.value = result.newSmilePanel ?? false;
-    pasteImage.value = result.pasteImage ?? false;
-    imgbbToken.value = result.imgbbToken ?? '';
-    soundNotifications.value = result.soundNotifications ?? false;
-    soundType.value = result.soundType ?? 'default';
-    customSoundName.value = result.customSoundName ?? '';
-    hoverLastNotifications.value = result.hoverLastNotifications ?? false;
-    showNotificationRatings.value = result.showNotificationRatings ?? false;
-    betterAvatarExport.value = result.betterAvatarExport ?? false;
-    const loadedIds = Array.isArray(result.ignoredSectionIds) ? result.ignoredSectionIds.map(Number) : [];
-    ignoredSectionIds.value = loadedIds;
+  loadExtSettings((result: ExtensionSettings) => {
+    oldDesign.value = result.oldDesign;
+    newSmilePanel.value = result.newSmilePanel;
+    pasteImage.value = result.pasteImage;
+    imgbbToken.value = result.imgbbToken;
+    soundNotifications.value = result.soundNotifications;
+    soundType.value = result.soundType;
+    customSoundName.value = result.customSoundName;
+    hoverLastNotifications.value = result.hoverLastNotifications;
+    showNotificationRatings.value = result.showNotificationRatings;
+    betterAvatarExport.value = result.betterAvatarExport;
+    listTopicSections.value = result.listTopicSections;
+    ignoredSectionIds.value = result.ignoredSectionIds;
   });
 }
+
 function onSoundFileChange(e: Event) {
   const file = (e.target as HTMLInputElement).files?.[0];
   if (file) {
@@ -179,28 +198,28 @@ function onSoundFileChange(e: Event) {
     saveSettings();
   }
 }
+
 async function toggleIgnoredSection(id: number) {
   if (ignoredSectionIds.value.includes(id)) {
     ignoredSectionIds.value = ignoredSectionIds.value.filter(x => x !== id);
   } else {
     ignoredSectionIds.value = [...ignoredSectionIds.value, id];
   }
+  // await fetch("/forum/api/feed/saveSettings", {
+  //   method: "POST",
+  //   headers: {
+  //     "content-type": "application/json",
+  //     "x-requested-with": "XMLHttpRequest"
+  //   },
+  //   body: JSON.stringify({
+  //     ids: [...ignoredSectionIds.value]
+  //   })
+  // })
   saveSettings();
-  await fetch("/forum/api/feed/saveSettings", {
-    method: "POST",
-    headers: {
-      "content-type": "application/json",
-      "x-requested-with": "XMLHttpRequest"
-    },
-    body: JSON.stringify({
-      ids: [...ignoredSectionIds.value]
-    })
-  });
 }
+
 onMounted(() => {
   loadSettings();
 });
 watch(imgbbToken, saveSettings);
 </script>
-<style lang="scss" scoped>
-</style>
