@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "SuperMegaUltraD2RU",
-  "version": "3.0.0",
-  "description": "dota2.ru ext",
+  "name": "dota2.ru_ext",
+  "version": "3.0.2",
+  "description": "dota2.ru_ext",
   "permissions": [
     "scripting",
     "storage"
@@ -11,6 +11,14 @@
     "https://dota2.ru/*"
   ],
   "content_scripts": [
+    {
+      "matches": [
+        "https://dota2.ru/*"
+      ],
+      "js": [
+        "pages/all.js"
+      ]
+    },
     {
       "matches": [
         "https://dota2.ru/forum/threads/*.*/*"
@@ -67,12 +75,22 @@
       "js": [
         "pages/notifications.js"
       ]
+    },
+    {
+      "matches": [
+        "https://dota2.ru/forum/members/*"
+      ],
+      "js": [
+        "pages/members.js"
+      ]
     }
   ],
   "web_accessible_resources": [
     {
       "resources": [
         "style/main.css",
+        "style/newVersion.css",
+        "style/old.css",
         "style/smilesPanel.css",
         "parasite.js"
       ],

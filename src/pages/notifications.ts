@@ -1,4 +1,4 @@
-import {getNotifications} from "../utils";
+import { getNotifications } from '../api';
 
 const currentPageElement = document.querySelector('#pagination-vue .pagination-vue-item.checked');
 const currentPage = currentPageElement ? parseInt(currentPageElement.textContent || '1') : 1;

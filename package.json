@@ -1,9 +1,11 @@
 {
   "name": "dota2.ru_ext",
-  "version": "3.0.0",
+  "version": "3.0.2",
   "description": "bla bla bla",
   "scripts": {
     "build": "webpack --mode production",
+    "build:chrome": "webpack --mode production --config webpack.config.js --env browser=chrome",
+    "build:firefox": "webpack --mode production --config webpack.config.js --env browser=firefox",
     "dev": "webpack --mode development --watch",
     "clean": "rm -rf build"
   },

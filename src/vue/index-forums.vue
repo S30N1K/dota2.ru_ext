@@ -29,7 +29,8 @@
 </template>
 <script lang="ts" setup>
 import {onMounted, ref} from "vue";
-import {parseFeed, stripAllHtmlContent} from "../utils";
+import { parseFeed } from "../api";
+import { stripAllHtmlContent } from "../utils";
 const forumList = ref<any[]>([]);
 onMounted(async () => {
   forumList.value = [...await parseFeed(), ...await parseFeed(10)]

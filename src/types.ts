@@ -1,5 +1,3 @@
-// Интерфейсы из utils.ts
-
 export interface IForumSections {
     name: string;
     id: number;

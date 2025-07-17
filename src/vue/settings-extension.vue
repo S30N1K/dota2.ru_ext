@@ -129,7 +129,8 @@
 </template>
 <script lang="ts" setup>
 import {ref, watch, onMounted, computed} from 'vue';
-import {parasite, pareForumSections} from "../utils";
+import {parasite} from "../utils";
+import { parseForumSections } from "../api";
 import { saveSettings as saveExtSettings, loadSettings as loadExtSettings } from '../settings';
 import {IForumSections, ExtensionSettings} from "../types";
 
@@ -148,10 +149,10 @@ const ignoredSections = ref<IForumSections[]>([]);
 const listTopicSections = ref(false);
 const ignoredSectionIds = ref<number[]>([]);
 
-const disabled = ref<string[]>(["pasteImage", "soundNotifications", "hoverLastNotifications", "showNotificationRatings", "betterAvatarExport"]);
+const disabled = ref<string[]>(["soundNotifications", "hoverLastNotifications", "showNotificationRatings", "betterAvatarExport"]);
 
 onMounted(async () => {
-  ignoredSections.value = await pareForumSections()
+  ignoredSections.value = await parseForumSections()
 })
 
 function saveSettings() {

@@ -1,125 +1,73 @@
-import {createApp, DefineComponent} from "vue";
-import smilesPanel from "./vue/smilesPanel.vue"
-import {IForumSections, Thread, ISmile, ISmileCategory, INotificationItem} from "./types";
+import { createApp, DefineComponent } from "vue";
+import smilesPanel from "./vue/smilesPanel.vue";
 
-export function safeAlert(msg: string) {
-    console.log(msg);
-}
-
-export async function parse(url: string, data?: any) {
-    const res = await fetch(url, {
-        "headers": {
-            "content-type": "application/json",
-            "x-requested-with": "XMLHttpRequest"
-        },
-        "body": data ? JSON.stringify(data) : null,
-        "method": data ? "POST" : "GET"
-    })
-
-    if (data){
-        return res.json()
-    }
-
-    return res.text()
-}
-
+// Подключение Vue-компонента
 export function loadVue(
     selector: string | HTMLElement,
     component: DefineComponent<{}, {}, any>,
     props?: Record<string, any>
-) {
-    const container = typeof selector === 'string' ? document.querySelector(selector) : selector;
+): void {
+    const container = typeof selector === "string" ? document.querySelector<HTMLElement>(selector) : selector;
     if (container) {
-        container.innerHTML = '';
+        container.innerHTML = "";
         const app = createApp(component, props);
         app.mount(container);
     }
 }
 
-export async function pareForumSections(): Promise<IForumSections[]> {
-    const html = await parse("https://dota2.ru/forum/")
-    const doc = new DOMParser().parseFromString(html, 'text/html');
-    return [...doc.querySelectorAll(".forum-page__list .forum-page__item-title-block a")].map(e => {
-        const href = e.getAttribute("href") || "";
-        const match = href.match(/forums\/(.*)\.(\d+)\//);
-        const id = match ? parseInt(match[2]) : null;
-        const name = e.textContent?.trim() || null;
-        return id && name ? {id, name} : null;
-    }).filter(item => item !== null);
-}
-
-export async function parseFeed(offset: number = 0): Promise<Thread[]> {
-    return (await parse("https://dota2.ru/forum/api/feed/get", {
-        offset,
-        order: "new"
-    })).items;
-}
-
+// Удаление HTML-тегов и скриптов
 export function stripAllHtmlContent(html: string): string {
-    const div = document.createElement('div');
+    const div = document.createElement("div");
     div.innerHTML = html;
-    const tagsToRemove = ['script', 'style', 'template', 'noscript'];
-    tagsToRemove.forEach(tag => {
-        div.querySelectorAll(tag).forEach(el => el.remove());
-    });
-    const text = div.textContent || '';
-    return text.trim().slice(-300);
+
+    const tagsToRemove = ["script", "style", "template", "noscript"];
+    tagsToRemove.forEach(tag =>
+        div.querySelectorAll(tag).forEach(el => el.remove())
+    );
+
+    return (div.textContent || "").trim().slice(-300);
 }
 
-export function parasite(type: string, payload: any) {
-    window.postMessage({
-        source: 'parasite',
-        type,
-        payload
-    }, '*');
+// Отправка кастомного postMessage
+export function parasite(type: string, payload: any): void {
+    window.postMessage({ source: "parasite", type, payload }, "*");
 }
 
-export function initSmilesPanel(selector: HTMLElement) {
-    const smilesContainer = document.createElement('div');
-    selector.parentNode?.appendChild(smilesContainer)
-    loadVue(smilesContainer, smilesPanel)
+// Инициализация панели смайлов
+export function initSmilesPanel(selector: HTMLElement): void {
+    const smilesContainer = document.createElement("div");
+    selector.parentNode?.appendChild(smilesContainer);
+    loadVue(smilesContainer, smilesPanel);
 }
 
+// Получение уникального CSS-селектора
 export function getUniqueSelector(el: HTMLElement): string {
     if (el.id) return `#${el.id}`;
-    if (el.className && typeof el.className === 'string') {
-        const classSelector = '.' + Array.from(el.classList).join('.');
-        return el.tagName.toLowerCase() + classSelector;
+    if (el.classList.length > 0) {
+        return `${el.tagName.toLowerCase()}.${[...el.classList].join('.')}`;
     }
     return el.tagName.toLowerCase();
 }
 
-export function loadCss(url: string) {
-    const link = document.createElement('link');
-    link.rel = 'stylesheet';
-    link.type = 'text/css';
-    link.href = url
+// Подключение CSS по ссылке
+export function loadCss(url: string): void {
+    const link = document.createElement("link");
+    link.rel = "stylesheet";
+    link.type = "text/css";
+    link.href = url;
     document.head.appendChild(link);
 }
 
-export const getSmiles = (() => {
-    let cachedSmiles: { categories: any[]; smiles: any[] } | null = null;
 
-    return async function (): Promise<any> {
-        if (cachedSmiles) {
-            return cachedSmiles;
-        }
+// Проверка версии расширения
+export function isNewVersion(): boolean {
+    const savedVersion = localStorage.getItem("dota2.ru_extVersion") || "";
+    const currentVersion = chrome.runtime.getManifest().version;
+    return savedVersion !== currentVersion;
+}
 
-        const res = (await parse("/replies/get_smiles", {})).smiles;
-
-        cachedSmiles = {
-            categories: res.categories ?? [],
-            smiles: Object.values(res.smiles).flat()
-        };
-
-        return cachedSmiles;
-    };
-})();
-
-
-export async function getNotifications(page: number = 1): Promise<INotificationItem[]> {
-    return (await parse("/forum/api/notices/preload", {
-        "name": "Все уведомления",
-        "page": page
-    })).notices;
+// Сохранение текущей версии расширения
+export function saveVersion(): void {
+    const currentVersion = chrome.runtime.getManifest().version;
+    localStorage.setItem("dota2.ru_extVersion", currentVersion);
 }

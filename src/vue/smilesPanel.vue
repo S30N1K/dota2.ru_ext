@@ -35,7 +35,8 @@
 
 <script lang="ts" setup>
 import {onMounted, ref, computed} from 'vue'
-import {getSmiles, parasite} from "../utils";
+import { getSmiles } from "../api";
+import { parasite } from "../utils";
 import {ISmile, ISmileCategory} from "../types";
 
 const search = ref('')
@@ -96,8 +97,8 @@ function toggleFavorite(smileId: string) {
 
 onMounted(async () => {
   const parse = await getSmiles()
-  categories.value = parse.categories;
-  smiles.value = parse.smiles;
+  categories.value = parse!.categories;
+  smiles.value = parse!.smiles;
 
   categories.value.unshift({id: '-1', name: 'Избранное', img_tab_smile: '729'});
 
