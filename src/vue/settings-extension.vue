@@ -212,8 +212,9 @@ const menu = ref<Menu>({
 // --- Функции ---
 async function getIgnoredUserLinks(): Promise<string> {
   const ignoredUsers = await getIgnoredUsers();
+  console.log(ignoredUsers);
   return ignoredUsers
-    .map(user => `<a href="https://dota2.ru/forum/members/.${user.id}/">${user.nickname}</a>`)
+    .map(user => `<a href="https://dota2.ru/forum/members/.${user.targetUserId}/">${user.nickname}</a>`)
     .join(', ');
 }
 
