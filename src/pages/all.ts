@@ -1,11 +1,7 @@
-import {getOrUpdateUserInfo, isNewVersion, saveVersion} from "../storage";
-import {getUserInfo, getUserSignature} from "../api";
-
 if (isNewVersion()) {
     const pulseClass = "pulse";
 
     const selectors: string[] = [
-        ".header__link--user img",
         ".header__sublist li:nth-child(7)",
     ];
 
