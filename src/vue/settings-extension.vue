@@ -112,8 +112,6 @@ import { getIgnoredUsers } from "../storage";
 let saveTimer: NodeJS.Timeout | null = null;
 const SAVE_DELAY = 1500;
 
-// --- Константы ---
-const IMGBB_TOKEN = "05b36feae2ca1f1f63701c921f55e6f0";
 
 // --- Реактивные настройки расширения ---
 const config: ReactiveSettings = {
@@ -221,7 +219,6 @@ async function getIgnoredUserLinks(): Promise<string> {
 
 async function saveSettings(): Promise<void> {
   const settings: ExtensionSettings = {} as ExtensionSettings;
-  settings.imgbbToken = IMGBB_TOKEN;
   
   for (const key of settingsKeys) {
     if (key === "ignoredSectionIds") {

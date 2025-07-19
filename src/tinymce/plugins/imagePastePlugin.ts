@@ -1,7 +1,9 @@
 import {uploadToImgbb} from "../../api";
 
 export function registerImagePastePlugin(editor: any, imgbbToken: string) {
+    console.log("registerImagePastePlugin", imgbbToken);
     editor.on("paste", (event: ClipboardEvent) => {
+        console.log("paste", event);
         const items = event.clipboardData?.items;
         if (!items) return; 
 

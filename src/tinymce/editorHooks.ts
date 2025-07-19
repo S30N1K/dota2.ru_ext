@@ -13,8 +13,8 @@ export function handleEditor(editor: any, settings: ExtensionSettings) {
         }
     });
 
-    if (settings.pasteImage && settings.imgbbToken) {
-        registerImagePastePlugin(editor, settings.imgbbToken);
+    if (settings.pasteImage) {
+        registerImagePastePlugin(editor, "05b36feae2ca1f1f63701c921f55e6f0");
     }
 }
 
