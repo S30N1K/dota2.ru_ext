@@ -22,11 +22,9 @@ export function setupTinyMCEHook(settings: ExtensionSettings) {
     const { tinymce } = window;
     if (!tinymce || !Array.isArray(tinymce.editors)) return false;
 
-
     if (settings.newSmilePanel) {
         registerSmileyPlugin();
     }
-
 
     tinymce.editors.forEach((editor: any) => {
         if (editor.initialized) {

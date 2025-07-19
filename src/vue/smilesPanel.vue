@@ -74,7 +74,7 @@ function openCategory(category: string) {
 }
 
 function getSmileUrl(smile: ISmile) {
-  return '/img/forum/emoticons/' + smile.filename
+  return `/img/forum/emoticons/${  smile.filename}`
 }
 
 function findSmileById(id: string): ISmile {

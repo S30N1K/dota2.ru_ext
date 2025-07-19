@@ -7,7 +7,5 @@ export function registerSmileyPlugin() {
                 );
             }
         };
-        // Можно добавить команду, если нужно
-        // editor.addCommand('insertSmile', ...);
     });
 }

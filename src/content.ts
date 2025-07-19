@@ -1,4 +1,5 @@
-import {isNewVersion, loadCss, parasite} from "./utils";
+import {isNewVersion} from "./storage";
+import {loadCss, parasite} from "./utils";
 import {loadSettings} from "./settings";
 
 const getUrl = (path: string) => chrome.runtime.getURL(path);

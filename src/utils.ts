@@ -1,5 +1,6 @@
-import { createApp, DefineComponent } from "vue";
+import {createApp, DefineComponent} from "vue";
 import smilesPanel from "./vue/smilesPanel.vue";
+import {ICurrentUser} from "./types";
 
 // Подключение Vue-компонента
 export function loadVue(
@@ -30,7 +31,7 @@ export function stripAllHtmlContent(html: string): string {
 
 // Отправка кастомного postMessage
 export function parasite(type: string, payload: any): void {
-    window.postMessage({ source: "parasite", type, payload }, "*");
+    window.postMessage({source: "parasite", type, payload}, "*");
 }
 
 // Инициализация панели смайлов
@@ -58,16 +59,24 @@ export function loadCss(url: string): void {
     document.head.appendChild(link);
 }
 
-
-// Проверка версии расширения
-export function isNewVersion(): boolean {
-    const savedVersion = localStorage.getItem("dota2.ru_extVersion") || "";
-    const currentVersion = chrome.runtime.getManifest().version;
-    return savedVersion !== currentVersion;
+// Текущая версия расширения
+export function getCurrentVersion(): string {
+    return chrome.runtime.getManifest().version;
 }
 
-// Сохранение текущей версии расширения
-export function saveVersion(): void {
-    const currentVersion = chrome.runtime.getManifest().version;
-    localStorage.setItem("dota2.ru_extVersion", currentVersion);
+// Возвращает id и ник текущего пользователя
+export function getCurrentUser(): ICurrentUser {
+    const headerUser = document.querySelector(".header__subitem-head");
+    const id = parseInt(headerUser?.querySelector("a")?.getAttribute("href")?.match(/\.([0-9]+)\//)?.[1] || "0");
+    const nickname = headerUser?.querySelector(".header__subitem-text--name")?.textContent?.trim() || "";
+    return {
+        id, 
+        nickname
+    };
+}
+
+// Простая проверка на авторизацию
+export function isAuth(): boolean {
+    const user = getCurrentUser();
+    return user.id > 0 && user.nickname !== "";
 }

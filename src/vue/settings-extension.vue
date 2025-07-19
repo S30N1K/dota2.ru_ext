@@ -1,226 +1,303 @@
 <template>
   <div class="settings-page__columns">
-    <div class="settings-page__column">
-      <div class="bg-main-block settings-page__block">
-        <p class="settings-page__block-title">Настройки расширения</p>
-        <div class="settings-page__block-splitter">
-          <div class="settings-page__block-splitter--item">Использовать старое оформление</div>
-          <div class="settings-page__block-splitter--item">
-            <input type="checkbox" v-model="oldDesign" @change="saveSettings" id="oldDesign" :disabled="disabled.includes('oldDesign')">
-          </div>
-        </div>
-        <hr>
-        <div class="settings-page__block-splitter">
-          <div class="settings-page__block-splitter--item">Новая панель со смайлами</div>
-          <div class="settings-page__block-splitter--item">
-            <input type="checkbox" v-model="newSmilePanel" @change="saveSettings" id="newSmilePanel" :disabled="disabled.includes('newSmilePanel')">
-          </div>
-        </div>
-        <hr>
-        <div class="settings-page__block-splitter">
-          <div class="settings-page__block-splitter--item">Вставка изображений по Ctrl+V</div>
-          <div class="settings-page__block-splitter--item">
-            <input type="checkbox" v-model="pasteImage" @change="saveSettings" id="pasteImage" :disabled="disabled.includes('pasteImage')">
-          </div>
-        </div>
-        <div style="margin-bottom: 10px; margin-left: 20px; font-size: 13px;" v-if="pasteImage">
-          Для работы требуется imgbb token.<br>
-          <b>Инструкция</b><br>
-          Идем сюда <a href="https://imgbb.com/" target="_blank">https://imgbb.com/</a><br>
-          1) Регистрируемся, или заходим под своей учеткой, если уже зарегистрированы.<br>
-          2) как авторизовались, идем сюда <a href="https://api.imgbb.com/"
-                                              target="_blank">https://api.imgbb.com/</a><br>
-          3) жмем кнопку вверху "GET API KEY"<br>
-          4) получаем длинный ключ, копируем его.<br>
-          5) вставляем его в поле ниже
-          <div style="margin-top: 8px;">
-            <label>imgbb token:
-              <input type="text" v-model="imgbbToken" @input="saveSettings" placeholder="Введите ваш imgbb token"/>
-            </label>
-          </div>
-        </div>
-        <hr>
-        <div class="settings-page__block-splitter">
-          <div class="settings-page__block-splitter--item">Звуковые оповещения при поступлении уведомлений</div>
-          <div class="settings-page__block-splitter--item">
-            <input type="checkbox" v-model="soundNotifications" @change="saveSettings" id="soundNotifications" :disabled="disabled.includes('soundNotifications')">
-          </div>
-        </div>
-        <div v-if="soundNotifications" style="margin-bottom: 10px; margin-left: 20px; font-size: 13px;">
-          <div>Выберите звук оповещения:</div>
-          <label>
-            <input type="radio" value="default" v-model="soundType" @change="saveSettings"/>
-            Стандартный звук
-          </label>
-          <label style="margin-left: 16px;">
-            <input type="radio" value="custom" v-model="soundType" @change="saveSettings"/>
-            Свой звук
-          </label>
-          <div v-if="soundType === 'custom'" style="margin-top: 8px;">
-            <input type="file" accept="audio/*" @change="onSoundFileChange"/>
-            <div v-if="customSoundName">Загружен файл: {{ customSoundName }}</div>
-          </div>
-        </div>
-        <hr>
-        <div class="settings-page__block-splitter">
-          <div class="settings-page__block-splitter--item">Вывод последней страницы уведомлений при наведении на значок
-            уведомлений
-          </div>
-          <div class="settings-page__block-splitter--item">
-            <input type="checkbox" v-model="hoverLastNotifications" @change="saveSettings" id="hoverLastNotifications" :disabled="disabled.includes('hoverLastNotifications')">
-          </div>
-        </div>
-        <hr>
-        <div class="settings-page__block-splitter">
-          <div class="settings-page__block-splitter--item">Отображение оценок на странице уведомлений</div>
-          <div class="settings-page__block-splitter--item">
-            <input type="checkbox" v-model="showNotificationRatings" @change="saveSettings"
-                   id="showNotificationRatings" :disabled="disabled.includes('showNotificationRatings')">
-          </div>
-        </div>
-        <hr>
-        <div class="settings-page__block-splitter">
-          <div class="settings-page__block-splitter--item">Улучшенная выгрузка аватаров</div>
-          <div class="settings-page__block-splitter--item">
-            <input type="checkbox" v-model="betterAvatarExport" @change="saveSettings" id="betterAvatarExport" :disabled="disabled.includes('betterAvatarExport')">
-          </div>
-        </div>
-        <div style="margin-bottom: 10px; margin-left: 20px; font-size: 13px;">
-          Улучшает выгрузку аватаров. Частично снимает ограничение на выгрузку. Улучшенный выбор кадра. Можно выбирать
-          кадр из гиф, если нет премиума. Гифки теперь тоже можно обрезать.
-        </div>
-      </div>
-      <hr>
-      <div class="bg-main-block settings-page__block">
-        <p class="settings-page__block-title">Исходник</p>
-        <div class="settings-page__block-splitter--item">
-          Доступен тут: <a href="https://github.com/S30N1K/dota2.ru_ext" target="_blank">https://github.com/S30N1K/dota2.ru_ext</a>
+    <div class="settings-page__column" v-for="(column, columnIndex) of menu.columns" :key="columnIndex">
+      <div class="bg-main-block settings-page__block" v-for="(section, sectionIndex) of column.sections" :key="sectionIndex">
+        <p class="settings-page__block-title">{{ section.title }}</p>
+        <div class="settings-page__block-splitter" v-for="(configurate, configIndex) of section.configuration" :key="configIndex">
+          <!-- Checkbox конфигурация -->
+          <template v-if="isCheckboxConfig(configurate)">
+            <div class="settings-page__block-splitter--item">{{ configurate.title }}</div>
+            <div class="settings-page__block-splitter--item">
+              <input 
+                type="checkbox"
+                :id="configurate.key"
+                v-model="config[configurate.key].value"
+                :disabled="configurate.disabled"
+                @change="saveSettings"
+              >
+            </div>
+          </template>
+          
+          <!-- Select конфигурация -->
+          <template v-else-if="isSelectConfig(configurate)">
+            <div class="settings-page__block-splitter--item">{{ configurate.title }}</div>
+            <div class="settings-page__block-splitter--item">
+              <select 
+                :id="configurate.key"
+                v-model="config[configurate.key].value"
+                :disabled="configurate.disabled"
+                @change="saveSettings"
+              >
+                <option v-for="option in configurate.options" :key="option" :value="option">
+                  {{ option }}
+                </option>
+              </select>
+            </div>
+          </template>
+          
+          <!-- Text конфигурация -->
+          <template v-else-if="isTextConfig(configurate)">
+            <div class="settings-page__block-splitter--item" :colspan="2">
+              <span v-html="configurate.value"></span>
+            </div>
+          </template>
+          
+          <!-- Value конфигурация -->
+          <template v-else-if="hasValue(configurate)">
+            <div class="settings-page__block-splitter--item" :colspan="2">{{ configurate.value }}</div>
+          </template>
         </div>
       </div>
     </div>
-    <hr>
+    
+    <!-- Секция настроек тем форума -->
     <div class="settings-page__column">
       <div class="bg-main-block settings-page__block">
         <div id="forum_nodes" class="bg-main-block settings-page__block">
           <p class="settings-page__block-title">
             Настройка выводимых тем
-            <input type="checkbox" v-model="listTopicSections" @change="saveSettings" id="listTopicSections" :disabled="disabled.includes('listTopicSections')">
+            <input 
+              type="checkbox" 
+              v-model="config.listTopicSections" 
+              @change="saveSettings" 
+              id="listTopicSections"
+            >
           </p>
-          <p style="font-size: 13px;">Снимите галочку с тех разделов, темы из которых вы не хотите видеть в отображении
-            на главной странице сайта</p>
+          <p class="settings-page__description">
+            Снимите галочку с тех разделов, темы из которых вы не хотите видеть в отображении
+            на главной странице сайта
+          </p>
           <hr>
-          <label class="settings-page__block-splitter" v-for="e of ignoredSections" :key="e.id">
-            <span class="settings-page__block-splitter--item">{{ e.name }}</span>
+          <label 
+            class="settings-page__block-splitter" 
+            v-for="section of config.ignoredSections.value" 
+            :key="section.id"
+          >
+            <span class="settings-page__block-splitter--item">{{ section.name }}</span>
             <span class="settings-page__block-splitter--item">
-               <input type="checkbox"
-                      :checked="ignoredSectionIds.includes(Number(e.id))"
-                      @change="toggleIgnoredSection(Number(e.id))"
-                      :id="'ignoredSection_' + e.id"
-                      :value="Number(e.id)"
-                      :aria-checked="ignoredSectionIds.includes(Number(e.id))"
-                      :disabled="!listTopicSections"
-               >
-             </span>
+              <input 
+                type="checkbox"
+                :checked="isSectionIgnored(section.id)"
+                @change="toggleIgnoredSection(Number(section.id))"
+                :id="`ignoredSection_${section.id}`"
+                :disabled="!config.listTopicSections"
+              >
+            </span>
           </label>
         </div>
       </div>
     </div>
   </div>
 </template>
+
 <script lang="ts" setup>
-import {ref, watch, onMounted, computed} from 'vue';
-import {parasite} from "../utils";
+import { ref, watch, onMounted, computed } from 'vue';
+import { getCurrentVersion, parasite } from "../utils";
 import { parseForumSections } from "../api";
 import { saveSettings as saveExtSettings, loadSettings as loadExtSettings } from '../settings';
-import {IForumSections, ExtensionSettings} from "../types";
+import type { 
+  ExtensionSettings, 
+  IForumSections, 
+  ReactiveSettings, 
+  Menu, 
+  ExtensionSettingKey,
+  ConfigurationItem,
+  CheckboxConfigurationItem,
+  SelectConfigurationItem,
+  TextConfigurationItem
+} from "../types";
+import { getIgnoredUsers } from "../storage";
 
-const oldDesign = ref(false);
-const newSmilePanel = ref(false);
-const pasteImage = ref(false);
-const imgbbToken = ref('');
-const soundNotifications = ref(false);
-const soundType = ref('default');
-const customSound = ref<File | null>(null);
-const customSoundName = ref('');
-const hoverLastNotifications = ref(false);
-const showNotificationRatings = ref(false);
-const betterAvatarExport = ref(false);
-const ignoredSections = ref<IForumSections[]>([]);
-const listTopicSections = ref(false);
-const ignoredSectionIds = ref<number[]>([]);
+// --- Константы ---
+const IMGBB_TOKEN = "05b36feae2ca1f1f63701c921f55e6f0";
 
-const disabled = ref<string[]>(["soundNotifications", "hoverLastNotifications", "showNotificationRatings", "betterAvatarExport"]);
+// --- Реактивные настройки расширения ---
+const config: ReactiveSettings = {
+  oldDesign: ref(false),
+  newSmilePanel: ref(false),
+  pasteImage: ref(false),
+  imgbbToken: ref(''),
+  soundNotifications: ref(false),
+  soundType: ref('default'),
+  customSound: ref<File | null>(null),
+  customSoundName: ref(''),
+  hoverLastNotifications: ref(false),
+  showNotificationRatings: ref(false),
+  betterAvatarExport: ref(false),
+  ignoredSections: ref<IForumSections[]>([]),
+  listTopicSections: ref(false),
+  ignoredSectionIds: ref<number[]>([]),
+  saveInputFields: ref(false),
+  showSignatures: ref(false),
+  simpleMainPage: ref(false),
+  threadCreatorFrame: ref(false),
+  yourPostsFrame: ref(false),
+  followersFrame: ref(false),
+  ignoredByFrame: ref(false),
+};
 
-onMounted(async () => {
-  ignoredSections.value = await parseForumSections()
-})
+// --- Ключи для автоматизации сохранения/загрузки настроек ---
+const settingsKeys: ExtensionSettingKey[] = [
+  "oldDesign", "newSmilePanel", "pasteImage", "imgbbToken", "soundNotifications",
+  "soundType", "customSoundName", "hoverLastNotifications", "showNotificationRatings",
+  "betterAvatarExport", "listTopicSections", "ignoredSectionIds", "saveInputFields",
+  "showSignatures", "simpleMainPage", "threadCreatorFrame", "yourPostsFrame",
+  "followersFrame", "ignoredByFrame"
+];
 
-function saveSettings() {
-  const settings: ExtensionSettings = {
-    oldDesign: oldDesign.value,
-    newSmilePanel: newSmilePanel.value,
-    pasteImage: pasteImage.value,
-    imgbbToken: imgbbToken.value,
-    soundNotifications: soundNotifications.value,
-    soundType: soundType.value,
-    customSoundName: customSoundName.value,
-    hoverLastNotifications: hoverLastNotifications.value,
-    showNotificationRatings: showNotificationRatings.value,
-    betterAvatarExport: betterAvatarExport.value,
-    listTopicSections: listTopicSections.value,
-    ignoredSectionIds: ignoredSectionIds.value.map(Number),
-  };
-  saveExtSettings(settings);
-  parasite("NOTIFY", "Настройки расширения сохранены");
+// --- Вычисляемые свойства ---
+const isSectionIgnored = computed(() => (sectionId: number) => 
+  config.ignoredSectionIds.value.includes(sectionId)
+);
+
+// --- Функции проверки типов конфигурации ---
+const isCheckboxConfig = (config: ConfigurationItem): config is CheckboxConfigurationItem => 
+  'type' in config && config.type === 'checkbox';
+
+const isSelectConfig = (config: ConfigurationItem): config is SelectConfigurationItem => 
+  'type' in config && config.type === 'select';
+
+const isTextConfig = (config: ConfigurationItem): config is TextConfigurationItem => 
+  'type' in config && config.type === 'text';
+
+const hasValue = (config: ConfigurationItem): config is ConfigurationItem & { value: string } => 
+  'value' in config;
+
+// --- Структура меню настроек ---
+const menu = ref<Menu>({
+  columns: [
+    {
+      sections: [
+        {
+          title: "Оформление",
+          configuration: [
+            { title: "Использовать старое оформление", type: "checkbox", key: "oldDesign" },
+            { title: "Показывать подписи в темах форума", type: "checkbox", key: "showSignatures" },
+            { title: "Упрощенная главная страница", type: "checkbox", key: "simpleMainPage", disabled: true },
+            { title: "Рамка вокруг создателя темы", type: "checkbox", key: "threadCreatorFrame", disabled: true },
+            { title: "Рамка вокруг ваших постов", type: "checkbox", key: "yourPostsFrame", disabled: true },
+            { title: "Рамка вокруг тех, кто на вас подписан", type: "checkbox", key: "followersFrame" },
+            { title: "Рамка вокруг того, кто вас игнорирует", type: "checkbox", key: "ignoredByFrame" }
+          ]
+        },
+        {
+          title: "Редактор",
+          configuration: [
+            { title: "Новая панель со смайлами", type: "checkbox", key: "newSmilePanel" },
+            { title: "Вставка изображений по Ctrl+V", type: "checkbox", key: "pasteImage" },
+            { title: "Сохранение содержимого полей ввода", type: "checkbox", key: "saveInputFields", disabled: true }
+          ]
+        },
+        {
+          title: "Список тех, кто вас игнорирует",
+          configuration: []
+        },
+        {
+          title: "Инфо",
+          configuration: [
+            { type: "text", value: `<b>Версия расширения:</b> ${getCurrentVersion()}` },
+            { type: "text", value: "<b>Автор расширения:</b> <a href='/forum/members/.474212/' target='_blank'>S30N1K</a>" },
+            { type: "text", value: "<b>Автор старого дизайна:</b> <a href='/forum/members/.818100/' target='_blank'>Руна дегенерации</a>" },
+            { type: "text", value: "<b>Ссылка на исходник:</b> <a href='https://github.com/S30N1K/dota2.ru_ext' target='_blank'>GITHUB</a>" },
+            { type: "text", value: "<b>Ссылка на группу Discord:</b> <a href='https://discord.gg/ptktuFEKyB' target='_blank'>Ядреное убежище</a>" }
+          ]
+        }
+      ]
+    }
+  ]
+});
+
+// --- Функции ---
+async function getIgnoredUserLinks(): Promise<string> {
+  const ignoredUsers = await getIgnoredUsers();
+  return ignoredUsers
+    .map(user => `<a href="https://dota2.ru/forum/members/.${user.id}/">${user.nickname}</a>`)
+    .join(', ');
 }
 
-function loadSettings() {
+async function saveSettings(): Promise<void> {
+  const settings: ExtensionSettings = {} as ExtensionSettings;
+  settings.imgbbToken = IMGBB_TOKEN;
+  
+  for (const key of settingsKeys) {
+    if (key === "ignoredSectionIds") {
+      (settings as any)[key] = (config[key].value as number[]).map(Number);
+    } else {
+      (settings as any)[key] = config[key].value;
+    }
+  }
+  
+  try {
+    await saveExtSettings(settings);
+    parasite("NOTIFY", "Настройки расширения сохранены");
+  } catch (error: unknown) {
+    console.error('Ошибка при сохранении настроек:', error);
+    parasite("NOTIFY", "Ошибка при сохранении настроек");
+  }
+}
+
+function loadSettings(): void {
+  console.log('Загрузка настроек...');
   loadExtSettings((result: ExtensionSettings) => {
-    oldDesign.value = result.oldDesign;
-    newSmilePanel.value = result.newSmilePanel;
-    pasteImage.value = result.pasteImage;
-    imgbbToken.value = result.imgbbToken;
-    soundNotifications.value = result.soundNotifications;
-    soundType.value = result.soundType;
-    customSoundName.value = result.customSoundName;
-    hoverLastNotifications.value = result.hoverLastNotifications;
-    showNotificationRatings.value = result.showNotificationRatings;
-    betterAvatarExport.value = result.betterAvatarExport;
-    listTopicSections.value = result.listTopicSections;
-    ignoredSectionIds.value = result.ignoredSectionIds;
+    console.log('Загруженные настройки:', result);
+    for (const key of settingsKeys) {
+      if (key in result && key in config) {
+        config[key].value = result[key as keyof ExtensionSettings];
+      }
+    }
+    console.log('Настройки применены к конфигу:', config);
   });
 }
 
-function onSoundFileChange(e: Event) {
-  const file = (e.target as HTMLInputElement).files?.[0];
-  if (file) {
-    customSound.value = file;
-    customSoundName.value = file.name;
-    saveSettings();
-  }
+async function toggleIgnoredSection(id: number): Promise<void> {
+  console.log('Переключение раздела:', id);
+  const currentIds = config.ignoredSectionIds.value;
+  const isIgnored = currentIds.includes(id);
+  
+  console.log('Текущие игнорируемые разделы:', currentIds);
+  console.log('Раздел игнорируется:', isIgnored);
+  
+  config.ignoredSectionIds.value = isIgnored 
+    ? currentIds.filter(x => x !== id)
+    : [...currentIds, id];
+    
+  console.log('Новые игнорируемые разделы:', config.ignoredSectionIds.value);
+  await saveSettings();
 }
 
-async function toggleIgnoredSection(id: number) {
-  if (ignoredSectionIds.value.includes(id)) {
-    ignoredSectionIds.value = ignoredSectionIds.value.filter(x => x !== id);
-  } else {
-    ignoredSectionIds.value = [...ignoredSectionIds.value, id];
-  }
-  // await fetch("/forum/api/feed/saveSettings", {
-  //   method: "POST",
-  //   headers: {
-  //     "content-type": "application/json",
-  //     "x-requested-with": "XMLHttpRequest"
-  //   },
-  //   body: JSON.stringify({
-  //     ids: [...ignoredSectionIds.value]
-  //   })
-  // })
-  saveSettings();
-}
-
-onMounted(() => {
+async function initializeSettings(): Promise<void> {
+  console.log('Инициализация настроек...');
+  
   loadSettings();
+  console.log('Настройки загружены');
+  
+  config.ignoredSections.value = await parseForumSections();
+  console.log('Разделы форума загружены:', config.ignoredSections.value.length);
+  
+  const ignoredUsersLinks = await getIgnoredUserLinks();
+  console.log('Ссылки игнорируемых пользователей получены');
+  
+  const ignoredUsersSection = menu.value.columns[0].sections[2];
+  
+  if (ignoredUsersSection) {
+    ignoredUsersSection.configuration.push({ type: "text", value: ignoredUsersLinks });
+    console.log('Секция игнорируемых пользователей обновлена');
+  }
+  
+  console.log('Инициализация завершена');
+}
+
+// --- Инициализация при монтировании компонента ---
+onMounted(initializeSettings);
+
+// --- Автоматическое сохранение при изменении токена imgbb ---
+watch(config.imgbbToken, async () => {
+  await saveSettings();
 });
-watch(imgbbToken, saveSettings);
 </script>
+
+<style scoped>
+.settings-page__description {
+  font-size: 13px;
+}
+</style>
