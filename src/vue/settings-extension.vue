@@ -13,7 +13,7 @@
                 :id="configurate.key"
                 v-model="config[configurate.key].value"
                 :disabled="configurate.disabled"
-                @change="saveSettings"
+                @change="debouncedSaveSettings"
               >
             </div>
           </template>
@@ -26,7 +26,7 @@
                 :id="configurate.key"
                 v-model="config[configurate.key].value"
                 :disabled="configurate.disabled"
-                @change="saveSettings"
+                @change="debouncedSaveSettings"
               >
                 <option v-for="option in configurate.options" :key="option" :value="option">
                   {{ option }}
@@ -37,14 +37,14 @@
           
           <!-- Text конфигурация -->
           <template v-else-if="isTextConfig(configurate)">
-            <div class="settings-page__block-splitter--item" :colspan="2">
+            <div class="settings-page__block-splitter--item">
               <span v-html="configurate.value"></span>
             </div>
           </template>
           
           <!-- Value конфигурация -->
           <template v-else-if="hasValue(configurate)">
-            <div class="settings-page__block-splitter--item" :colspan="2">{{ configurate.value }}</div>
+            <div class="settings-page__block-splitter--item">{{ configurate.value }}</div>
           </template>
         </div>
       </div>
@@ -59,7 +59,7 @@
             <input 
               type="checkbox" 
               v-model="config.listTopicSections" 
-              @change="saveSettings" 
+              @change="debouncedSaveSettings" 
               id="listTopicSections"
             >
           </p>
@@ -107,6 +107,10 @@ import type {
   TextConfigurationItem
 } from "../types";
 import { getIgnoredUsers } from "../storage";
+
+// --- Таймер для отложенного сохранения ---
+let saveTimer: NodeJS.Timeout | null = null;
+const SAVE_DELAY = 1500;
 
 // --- Константы ---
 const IMGBB_TOKEN = "05b36feae2ca1f1f63701c921f55e6f0";
@@ -236,6 +240,19 @@ async function saveSettings(): Promise<void> {
   }
 }
 
+function debouncedSaveSettings(): void {
+  // Очищаем предыдущий таймер
+  if (saveTimer) {
+    clearTimeout(saveTimer);
+  }
+  
+  // Устанавливаем новый таймер
+  saveTimer = setTimeout(async () => {
+    await saveSettings();
+    saveTimer = null;
+  }, SAVE_DELAY);
+}
+
 function loadSettings(): void {
   console.log('Загрузка настроек...');
   loadExtSettings((result: ExtensionSettings) => {
@@ -262,7 +279,7 @@ async function toggleIgnoredSection(id: number): Promise<void> {
     : [...currentIds, id];
     
   console.log('Новые игнорируемые разделы:', config.ignoredSectionIds.value);
-  await saveSettings();
+  debouncedSaveSettings();
 }
 
 async function initializeSettings(): Promise<void> {
@@ -291,8 +308,8 @@ async function initializeSettings(): Promise<void> {
 onMounted(initializeSettings);
 
 // --- Автоматическое сохранение при изменении токена imgbb ---
-watch(config.imgbbToken, async () => {
-  await saveSettings();
+watch(config.imgbbToken, () => {
+  debouncedSaveSettings();
 });
 </script>
 
