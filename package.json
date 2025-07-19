@@ -1,6 +1,6 @@
 {
   "name": "dota2.ru_ext",
-  "version": "3.0.2",
+  "version": "3.0.3",
   "description": "bla bla bla",
   "scripts": {
     "build": "webpack --mode production",
