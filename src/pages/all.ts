@@ -1,3 +1,5 @@
+import {isNewVersion, saveVersion} from "../storage";
+
 if (isNewVersion()) {
     const pulseClass = "pulse";
 
