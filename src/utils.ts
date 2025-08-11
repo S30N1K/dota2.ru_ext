@@ -4,7 +4,7 @@ import browser from "webextension-polyfill";
 import newSmilesPanel from "./vue/newSmilesPanel.vue";
 import {loadCss} from "./extension/utils";
 
-export function getExtUrl(path: string) {
+export function getExtUrl(path: string): string {
     return browser.runtime.getURL(path)
 }
 
@@ -236,8 +236,7 @@ export function initTinyMceNewSmilesPanel(selector: HTMLElement) {
 
     let isOpen = false;
 
-    const button = selector.querySelector('button[aria-label="Смайлы"]') as HTMLElement;
-    button.addEventListener('click', (e) => {
+    selector.querySelector<HTMLButtonElement>('button[aria-label="Смайлы"]')?.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
 
