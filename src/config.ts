@@ -24,7 +24,7 @@ const CONFIG_KEYS: (keyof ExtensionConfig)[] = [
     'ignoredByFrame',
     'ignoreIndexThemes',
     'ignoreForumPost',
-    'newRatePanel'
+    'newRatePanel',
 ];
 
 export async function saveConfig(settings: ExtensionConfig): Promise<void> {
@@ -37,7 +37,7 @@ export async function saveConfig(settings: ExtensionConfig): Promise<void> {
 
 export async function loadConfig(): Promise<ExtensionConfig> {
     console.log('Загрузка настроек через webextension-polyfill');
-    const result: any = await browser.storage.sync.get(CONFIG_KEYS);
+    const result: Partial<ExtensionConfig> = await browser.storage.sync.get(CONFIG_KEYS);
 
     return {
         oldDesign: result.oldDesign ?? false,
