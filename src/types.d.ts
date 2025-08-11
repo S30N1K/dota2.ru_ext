@@ -157,6 +157,12 @@ export interface IWallPost {
         username_link: string
     }
 }
+export interface IUserIgnoreList {
+    targetUserId: number
+    nickname: string
+}
+
+
 export interface ParsedPageResult {
     users: IFollowings[];
     maxPage: number;

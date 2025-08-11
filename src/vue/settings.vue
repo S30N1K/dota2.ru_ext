@@ -69,7 +69,7 @@ import Modal from './modal.vue'
 import { loadConfig, saveConfig } from '../config'
 import { ExtensionConfig } from "../types"
 import { getIgnoredUsers } from "../storage"
-import { parseForumSections, saveFeedSettings } from "../api"
+import {getIgnoreList, parseForumSections, saveFeedSettings} from "../api"
 
 // Типы
 interface ForumSection {
@@ -120,14 +120,17 @@ const formatUserList = (users: IgnoredUser[], emptyMessage: string): string => {
   return users.map(createUserLink).join(', ')
 }
 
+
 // Функции загрузки данных
 const loadIgnoredUsersData = async (): Promise<void> => {
   try {
     const ignoredUsers = await getIgnoredUsers()
-    
-    // Обновляем оба списка одновременно
+
     ignoredMeList.value = formatUserList(ignoredUsers, 'Никто вас не игнорирует')
-    // ignoredByMeList.value = formatUserList(ignoredUsers, 'Вы никого не игнорируете')
+
+    const ignoredUserList = await getIgnoreList()
+
+    ignoredByMeList.value = formatUserList(ignoredUserList, 'Вы никого не игнорируете')
   } catch (error) {
     console.error('Ошибка при загрузке списков игнорирования:', error)
     ignoredMeList.value = 'Ошибка загрузки'
@@ -212,10 +215,10 @@ const menuSections = computed<MenuSection[]>(() => [
   {
     title: 'Супер игнор',
     items: [
-      { type: 'checkbox', text: 'Скрыть темы с главной', key: 'ignoreIndexThemes', disabled: true },
+      { type: 'checkbox', text: 'Скрыть темы с главной', key: 'ignoreIndexThemes' },
       { type: 'checkbox', text: 'Скрыть сообщения с форума', key: 'ignoreForumPost'},
       { type: 'text', text: `<b>Список тех, кто вас игнорирует:</b> ${ignoredMeList.value}` },
-      // { type: 'text', text: `<b>Список тех, кого вы игнорируете:</b> ${ignoredByMeList.value}` },
+      { type: 'text', text: `<b>Список тех, кого вы игнорируете:</b> ${ignoredByMeList.value}` },
     ]
   },
   {
