@@ -1,13 +1,14 @@
 import {getCurrentVersion} from "./utils";
 import Dexie, { Table } from 'dexie';
-import {Relation, StoredUserInfo} from "./types";
 import {getUserInfo} from "./api";
+import {Relation, StoredUserInfo} from "./types";
 
-const KEY_VERSION = "dota2.ru_extVersio"
+const KEY_VERSION = "dota2.ru_extVersion"
+
+export type UserRelation = 'ignored' | 'subscriber' | 'neutral' | 'me' | 'error';
 
 // Время, через которое обновлять инфу о пользователя (друг, враг, нейтрален)
 const UPDATED_RELATION_TIME = 24 * 60 * 60 * 1000; // Раз в сутки
-
 
 // Проверка версии расширения
 export function isNewVersion(): boolean {

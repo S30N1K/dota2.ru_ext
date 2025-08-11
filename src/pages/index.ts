@@ -1,9 +1,12 @@
-import {initSmilesPanel, loadCss, loadVue, parasite} from '../utils';
-import indexForums from "../vue/index-forums.vue";
-import {ExtensionSettings} from "../types";
+import {ExtensionConfig} from "../types";
+import {loadVue} from "../utils";
+import indexForums from "../vue/indexForums.vue";
+import {getIgnoreList, parseFeed} from "../api";
 
-chrome.storage.sync.get(null, (conf: ExtensionSettings) => {
-    if (conf.listTopicSections) {
-        loadVue('.forum__list', indexForums);
+export default async function page(config: ExtensionConfig) {
+    if (config.listTopicSections){
+        const list = [...await parseFeed(), ...await parseFeed(10)]
+        console.log(list)
+        loadVue(".forum__list", indexForums, { forumList: list })
     }
-});
+}

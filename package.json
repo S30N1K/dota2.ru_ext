@@ -3,16 +3,15 @@
   "version": "3.0.3",
   "description": "bla bla bla",
   "scripts": {
-    "build": "webpack --mode production",
-    "build:chrome": "webpack --mode production --config webpack.config.js --env browser=chrome",
-    "build:firefox": "webpack --mode production --config webpack.config.js --env browser=firefox",
-    "dev": "webpack --mode development --watch",
+    "build": "webpack --config webpack.config.ts",
+    "dev": "webpack --config webpack.config.ts --watch --mode development",
     "clean": "rm -rf build",
     "lint": "eslint src --ext .ts,.vue",
     "lint:fix": "eslint src --ext .ts,.vue --fix"
   },
   "devDependencies": {
     "@types/chrome": "^0.0.332",
+    "@types/webextension-polyfill": "^0.12.3",
     "@typescript-eslint/eslint-plugin": "^6.21.0",
     "@typescript-eslint/parser": "^6.21.0",
     "@vue/compiler-sfc": "^3.5.17",
@@ -25,6 +24,7 @@
     "sass-loader": "^13.0.0",
     "style-loader": "^3.0.0",
     "ts-loader": "^9.5.2",
+    "ts-node": "^10.9.2",
     "typescript": "^5.0.0",
     "vue": "^3.5.17",
     "vue-loader": "^17.4.2",
@@ -33,6 +33,7 @@
     "webpack-cli": "^5.0.0"
   },
   "dependencies": {
-    "dexie": "^4.0.11"
+    "dexie": "^4.0.11",
+    "webextension-polyfill": "^0.10.0"
   }
 }
