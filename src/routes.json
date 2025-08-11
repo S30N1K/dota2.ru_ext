@@ -8,6 +8,10 @@
     "scripts": ["pages/forum-thread.js"]
   },
   {
+    "pattern": "^/forum/forums/*.*/create-thread/",
+    "scripts": ["pages/create-thread.js"]
+  },
+  {
     "pattern": "^/forum/settings/.*",
     "scripts": ["pages/settings.js"]
   },
