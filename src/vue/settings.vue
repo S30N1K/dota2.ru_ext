@@ -185,6 +185,8 @@ const menuSections = computed<MenuSection[]>(() => [
       { type: 'text', text: "<b>Автор старого дизайна:</b> <a href='/forum/members/.818100/' target='_blank'>Руна дегенерации</a>" },
       { type: 'text', text: "<b>Ссылка на исходник:</b> <a href='https://github.com/S30N1K/dota2.ru_ext' target='_blank'>GITHUB</a>" },
       { type: 'text', text: "<b>Ссылка на группу Discord:</b> <a href='https://discord.gg/ptktuFEKyB' target='_blank'>Ядреное убежище</a>" },
+      { type: 'text', text: "<span style='color: #a33f3f'>Расширение распространяется бесплатно, если захотите поддержать:</span> <a href='https://boosty.to/s30n1k' target='_blank'>BOOSTY</a>" },
+      { type: 'text', text: "<span>Для получения новостей по расширению, можно подписаться</span> <a href='/forum/members/.474212/' target='_blank'>на мою страницу на форуме</a>" },
     ]
   },
   {

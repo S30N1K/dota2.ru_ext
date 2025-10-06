@@ -16,6 +16,16 @@ export default async function page(config: ExtensionConfig) {
             ]);
             
             let list = [...mainFeed, ...additionalFeed];
+            
+            // Удаляем дубликаты по ID темы
+            const seenIds = new Set();
+            list = list.filter(item => {
+                if (seenIds.has(item.id)) {
+                    return false;
+                }
+                seenIds.add(item.id);
+                return true;
+            });
 
             // Фильтруем игнорируемые темы, если включена соответствующая настройка
             if (config.ignoreIndexThemes && user_ignored.length > 0) {

@@ -35,18 +35,19 @@
       <div class="list hiddenScroll">
         <!-- Сообщение для пустых избранных -->
         <template v-if="activeCategory === '-1' && currentSmiles.length === 0">
-          <div class="empty-favorites">Тут пока ничего нет</div>
+          <div class="empty-favorites">Тут пока ничего нет.<br> Для добавления смайла в этот список нажмите по нему - ПКМ.</div>
         </template>
         
         <!-- Список смайлов -->
         <template v-else>
-          <div 
-            class="smile" 
-            v-for="smile of currentSmiles" 
+          <div
+            class="smile"
+            v-for="smile of currentSmiles"
             :key="smile.id"
             @click="onSmile(smile)"
-            @mouseenter="hoveredSmile = smile.id" 
+            @mouseenter="hoveredSmile = smile.id"
             @mouseleave="hoveredSmile = null"
+            @contextmenu.prevent="showContextMenu($event, smile)"
             style="position: relative;"
           >
             <img 
@@ -56,21 +57,32 @@
             />
             
             <!-- Кнопка избранного (звездочка) -->
-            <span 
-              v-if="hoveredSmile === smile.id"
-              class="favorite-star"
-              :class="{ active: isFavorite(smile.id) }"
-              @click.stop="toggleFavorite(smile.id)"
-              style="position: absolute; top: 2px; right: 2px; cursor: pointer; font-size: 18px;"
-              :title="isFavorite(smile.id) ? 'Убрать из избранного' : 'Добавить в избранное'"
-            >
-              {{ isFavorite(smile.id) ? '★' : '☆' }}
-            </span>
+<!--            <span -->
+<!--              v-if="hoveredSmile === smile.id"-->
+<!--              class="favorite-star"-->
+<!--              :class="{ active: isFavorite(smile.id) }"-->
+<!--              @click.stop="toggleFavorite(smile.id)"-->
+<!--              style="position: absolute; top: 2px; right: 2px; cursor: pointer; font-size: 18px;"-->
+<!--              :title="isFavorite(smile.id) ? 'Убрать из избранного' : 'Добавить в избранное'"-->
+<!--            >-->
+<!--              {{ isFavorite(smile.id) ? '★' : '☆' }}-->
+<!--            </span>-->
           </div>
         </template>
       </div>
     </div>
   </div>
+
+  <!-- Контекстное меню -->
+  <ContextMenu
+    :visible="contextMenu.visible"
+    :x="contextMenu.x"
+    :y="contextMenu.y"
+    :smile="contextMenu.smile"
+    :is-favorite="isFavorite"
+    @action="handleContextMenuAction"
+    @close="hideContextMenu"
+  />
 </template>
 
 <script lang="ts" setup>
@@ -78,6 +90,7 @@ import { onMounted, ref, computed, watch } from 'vue'
 import { getSmiles } from "../api"
 import { getSmileUrl } from "../utils"
 import { ISmile, ISmileCategory } from "../types"
+import ContextMenu from "./contextMenu.vue"
 
 // ===== ПРОПСЫ =====
 interface Props {
@@ -92,6 +105,12 @@ const smiles = ref<ISmile[]>([])
 const activeCategory = ref<string>("")
 const hoveredSmile = ref<string | null>(null)
 const favorites = ref<string[]>([])
+const contextMenu = ref({
+  visible: false,
+  x: 0,
+  y: 0,
+  smile: null as ISmile | null
+})
 
 // ===== КОНСТАНТЫ =====
 const FAVORITES_KEY = 'smilesPanel_favorites'
@@ -171,6 +190,37 @@ function toggleFavorite(smileId: string): void {
   
   // Сохраняем в localStorage
   saveFavorites()
+}
+
+/**
+ * Показывает контекстное меню для смайла
+ * @param event - Событие мыши
+ * @param smile - Смайл для которого показывается меню
+ */
+function showContextMenu(event: MouseEvent, smile: ISmile): void {
+  contextMenu.value = {
+    visible: true,
+    x: event.clientX,
+    y: event.clientY,
+    smile
+  }
+  
+}
+
+/**
+ * Скрывает контекстное меню
+ */
+function hideContextMenu(): void {
+  contextMenu.value.visible = false
+  contextMenu.value.smile = null
+}
+
+/**
+ * Обрабатывает действие контекстного меню
+ * @param smile - Смайл для которого выполняется действие
+ */
+function handleContextMenuAction(smile: ISmile): void {
+  toggleFavorite(smile.id)
 }
 
 /**
