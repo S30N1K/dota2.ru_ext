@@ -47,7 +47,7 @@
 ---
 ### 0. Из магазина расширений
 - [Google chrome](https://chromewebstore.google.com/detail/dota2ruext/nmdhjkimgodhajlapkgollhebkajogdg?pli=1)
-- [Firefox](https://addons.mozilla.org/ru/firefox/addon/dota2-ru_ext/)
+- [Firefox](https://addons.mozilla.org/ru/firefox/addon/dota2-ru_ext/) *тут старая версия - 3.05, обновляться пока не будет, утерял доступ к аккаунту. Кому нужно под firefox - собирайте сами, инструкция ниже
 
 ### 1. Самостоятельная сборка
 
