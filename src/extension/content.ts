@@ -1,56 +1,116 @@
-import {getExtUrl, initTinyMceNewSmilesPanel} from "../utils";
-import {loadConfig} from "../config";
-import {
-    initLastDialogs, initLastNotifications,
-    initSettingsButton,
-    loadCss,
-    loadPageModules,
-    loadScript,
-    processRoutes,
-    routes,
-    waitForDOMReady
-} from "./utils";
+import { sendToBackground, onInjectedMessage, InjectedMessage } from "./utils/communication"
+import browser from "./utils/browser"
+import { extLogger } from "../logger"
+import type { DatabaseTables } from "../types"
+import { startHotReloadSocket } from "./utils/hotReloadSocket"
+const log = new extLogger("extension/content.ts")
 
-async function main() {
-    const config = await loadConfig();
-    await waitForDOMReady();
-
-    // Загрузка базовых стилей расширения
-    loadCss(getExtUrl("style/style.css"));
-
-    // Загрузка старого оформления
-    if (config.oldDesign) {
-        loadCss(getExtUrl("style/old.css"));
-    }
-
-    // Добавляем иконку настроек в шапку
-    initSettingsButton();
-
-    if (config.hoverLastDialogs){
-        await initLastDialogs(config)
-    }
-
-    if (config.hoverLastNotifications) {
-        await initLastNotifications(config)
-    }
-
-    loadScript(getExtUrl("injected.js"), async () => {
-        // Грузим другие скрипты для текущей страницы
-        const moduleMap = loadPageModules();
-        await processRoutes(location.pathname, config, moduleMap, routes);
-    })
+// Функция отправки сообщения в injected
+function sendMessageToInjected<T = any>(message: InjectedMessage<T>) {
+	window.dispatchEvent(new CustomEvent("FROM_CONTENT_SCRIPT", { detail: message }))
 }
 
-window.addEventListener("message", (event) => {
-    if (event.source !== window) return;
+function waitForDOMReady(): Promise<void> {
+	return new Promise(resolve => {
+		if (document.readyState === "loading") {
+			document.addEventListener("DOMContentLoaded", () => resolve())
+		} else {
+			resolve()
+		}
+	})
+}
 
-    switch (event.data.type) {
-        case "tinyMCE": {
-            const selector = event.data.payload
-            initTinyMceNewSmilesPanel(document.querySelector(selector));
-            break
-        }
-    }
-});
+// Обработка сообщений от injected
+onInjectedMessage(async (msg: InjectedMessage, sendResponse) => {
+	log.info("Сообщение от injected", msg)
 
-main().catch(console.error);
+	switch (msg.type) {
+		case "RESET_SETTINGS": {
+			await sendToBackground({ type: "RESET_SETTINGS" })
+			break
+		}
+		case "SAVE_DATABASE": {
+			const data = msg.payload as {
+				table: string
+				data: object
+			}
+			await sendToBackground({
+				type: "SAVE_DATABASE",
+				payload: { table: data.table, data: data.data },
+			})
+			break
+		}
+
+		default:
+			sendResponse({ success: false, error: "Неизвестный тип сообщения" })
+	}
+})
+
+// Загружаем скрипты
+function loadScript(path: string, cb?: () => void) {
+	const script = document.createElement("script")
+	script.src = browser.runtime.getURL(path)
+	;(document.head || document.documentElement).appendChild(script)
+	script.addEventListener("load", () => {
+		log.info(`Скрипт ${path} подключен`)
+		cb && cb()
+		script.remove()
+	})
+}
+
+// Загружаем стили
+function loadCss(path: string, cb?: () => void) {
+	const link = document.createElement("link")
+	link.rel = "stylesheet"
+	link.type = "text/css"
+	link.href = browser.runtime.getURL(path)
+	link.addEventListener("load", () => {
+		log.info(`Стиль ${path} подключен`)
+		cb && cb()
+	})
+	document.head.appendChild(link)
+}
+
+async function main() {
+	const response = await sendToBackground({ type: "GET_DATABASE" })
+	const { currentUser, chatSettings, settings } = response.data as DatabaseTables
+
+	await waitForDOMReady()
+
+	loadScript("injected.js", () => {
+		sendMessageToInjected({
+			type: "LOADED",
+			payload: {
+				extensionUrl: browser.runtime.getURL(""),
+				database: {
+					currentUser,
+					chatSettings,
+					settings,
+				},
+			},
+		})
+	})
+
+	if (settings.restoreOldDesign) {
+		loadCss("style/old.css")
+	}
+
+	if (settings.chatEnabled) {
+		loadCss("style/chat.css")
+		loadCss("style/chatInput.css")
+	}
+
+	if (settings.newSmilesPanel || settings.chatEnabled) {
+		loadCss("style/newSmilesPanel.css")
+	}
+
+	if (settings.searchUsersHeader) {
+		loadCss("style/searchUserHeader.css")
+	}
+}
+
+main().catch(error => log.error(error))
+
+if (process.env.NODE_ENV === "dev") {
+	startHotReloadSocket()
+}

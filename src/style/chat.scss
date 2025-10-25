@@ -1,0 +1,295 @@
+.chatBody {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+
+  .chatStatus {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    font-size: 16px;
+    color: #999;
+
+    span {
+      padding: 0 50px;
+      text-align: center;
+
+      .accept {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        button {
+          margin-top: 20px;
+          background: #363636;
+          padding: 10px;
+          border-radius: 5px;
+
+          &:hover {
+            background: black;
+            cursor: pointer;
+          }
+        }
+      }
+    }
+  }
+}
+
+.chatContainer {
+  position: relative;
+  display: flex;
+  flex: 1;
+  color: #fff;
+  overflow: hidden;
+
+  .messages {
+    flex: 1;
+    overflow-y: auto;
+    padding-right: 5px;
+    scroll-behavior: smooth;
+
+    .message {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      padding: 6px 10px;
+      position: relative;
+
+      &.pingMe {
+        background: #2e2927;
+      }
+
+      .avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        flex-shrink: 0;
+        position: sticky;
+        top: 8px; /* насколько «прилипает» сверху */
+        align-self: flex-start;
+        z-index: 2; /* чтобы не перекрывал текст */
+        transition: transform 0.2s ease-out,
+        opacity 0.2s ease-out;
+      }
+
+      .content {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        min-width: 0;
+
+        .username {
+          font-weight: 400;
+          color: #81a1c1;
+          margin-bottom: 2px;
+
+          .time {
+            font-size: 10px;
+            color: #777;
+            margin-left: 6px;
+          }
+        }
+
+        .text {
+          color: #d8dee9;
+          line-height: 1.35;
+          word-break: break-word;
+          font-size: 14px;
+
+          .emoji {
+          }
+        }
+      }
+    }
+
+    .plug {
+      height: 23px;
+    }
+  }
+
+  .onlineUsers {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 200px;
+    height: 100%;
+    background-color: #2a2a2a;
+    border-bottom: 1px solid #0e0e0e;
+    border-left: 1px solid #0e0e0e;
+    border-bottom-left-radius: 5px;
+    overflow-y: auto;
+    z-index: 2;
+
+    .title {
+      padding: 10px;
+      font-weight: bold;
+    }
+
+    .onlineUser {
+      display: flex;
+      align-items: center;
+      margin-bottom: 6px;
+      padding: 5px 10px;
+
+      &:hover {
+        cursor: pointer;
+        background: #121111;
+      }
+
+      .avatar {
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        margin-right: 6px;
+      }
+
+      span {
+        font-size: 13px;
+      }
+    }
+  }
+}
+
+@keyframes blink {
+  0%,
+  80%,
+  100% {
+    opacity: 0.2;
+  }
+  40% {
+    opacity: 1;
+  }
+}
+
+.interaction-footer {
+  position: relative;
+
+  .smilesPanel {
+    width: 300px;
+    height: 300px;
+    position: absolute;
+    top: -310px;
+    right: 10px;
+    -webkit-box-shadow: 0px 0px 15px 5px #000000;
+    box-shadow: 0px 0px 15px 5px #000000;
+    z-index: 2;
+    border-top: 1px solid black;
+    border-right: 1px solid black;
+    border-left: 1px solid black;
+  }
+
+  .scroll-bottom-btn {
+    position: absolute;
+    display: flex;
+    top: -50px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 3;
+
+    button {
+      background: black;
+      border-radius: 5px;
+      padding: 5px;
+      opacity: 0.5;
+
+      span {
+        margin-left: 5px;
+      }
+
+      img {
+        width: 30px;
+        height: 30px;
+      }
+
+      &:hover {
+        opacity: 1;
+      }
+    }
+  }
+
+  .typingUsers {
+    position: absolute;
+    top: -26px;
+    font-size: 12px;
+    color: #88c0d0;
+    padding: 4px 10px;
+    display: flex;
+    align-items: center;
+    height: 26px;
+    gap: 6px;
+    background: #16161a;
+    width: calc(100% - 5px);
+    z-index: 2;
+
+    &:empty {
+      display: none;
+    }
+
+    .dots {
+      display: inline-flex;
+      gap: 3px;
+      margin-left: 5px;
+
+      span {
+        width: 5px;
+        height: 5px;
+        background: #88c0d0;
+        border-radius: 50%;
+        animation: blink 1s infinite ease-in-out;
+      }
+
+      span:nth-child(2) {
+        animation-delay: 0.2s;
+      }
+
+      span:nth-child(3) {
+        animation-delay: 0.4s;
+      }
+    }
+  }
+
+  .editor {
+    display: flex;
+    align-items: center;
+    padding: 4px 8px;
+    background: #060606;
+
+    .smile-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      margin-left: 4px;
+
+      img {
+        width: 24px;
+        height: 24px;
+      }
+    }
+  }
+}
+
+/* Анимации */
+.fade-up-enter-active,
+.fade-up-leave-active {
+  transition: all 0.3s ease;
+}
+
+.fade-up-enter-from {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.fade-up-leave-to {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
+.slide-right-enter-active,
+.slide-right-leave-active {
+  transition: transform 0.3s ease;
+}
+
+.slide-right-enter-from,
+.slide-right-leave-to {
+  transform: translateX(200px);
+}

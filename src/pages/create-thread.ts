@@ -1,6 +1,5 @@
-import {ExtensionConfig} from "../types";
-import {initTinyMcePlugins} from "../utils";
+import { initTinyMcePlugins } from "../utils/initTinyMcePlugins"
 
-export default async function page(config: ExtensionConfig) {
-    initTinyMcePlugins(config)
+export default async function () {
+	initTinyMcePlugins()
 }

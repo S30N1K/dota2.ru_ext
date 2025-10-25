@@ -1,312 +1,247 @@
 <template>
-  <!-- Основной контейнер панели смайлов -->
-  <div class="smilesPanel">
-    <!-- Панель категорий смайлов -->
-    <div class="categories hiddenScroll">
-      <div 
-        class="category" 
-        @click="openCategory(category.id)" 
-        v-for="category of categories"
-        :key="category.id"
-        :class="{ active: activeCategory === category.id }"
-      >
-        <img 
-          :src="getSmileUrl(findSmileById(category.img_tab_smile) || { id: category.img_tab_smile, category_id: '', symbol: '', title: category.name, filename: category.img_tab_smile })" 
-          :title="category.name"
-          :alt="category.name"
-        />
-      </div>
-    </div>
+	<!-- Основной контейнер панели смайлов -->
+	<div class="smilesPanel">
+		<!-- Панель категорий смайлов -->
+		<div class="categories hiddenScroll">
+			<div
+				class="category"
+				v-for="category of categories"
+				:key="category.id"
+				@click="openCategory(category.id)"
+				:class="{ active: activeCategory === category.id }"
+			>
+				<img
+					:src="
+						getSmileUrl(
+							findSmileById(category.img_tab_smile) || {
+								id: category.img_tab_smile,
+								category_id: '',
+								symbol: '',
+								title: category.name,
+								filename: category.img_tab_smile,
+							}
+						)
+					"
+					:title="category.name"
+					:alt="category.name"
+				/>
+			</div>
+		</div>
 
-    <!-- Основная область смайлов -->
-    <div class="smiles">
-      <!-- Поисковая строка -->
-      <div class="search">
-        <input 
-          type="text" 
-          v-model="search" 
-          placeholder="Поиск" 
-          class="content-inline search_smile_input"
-          @input="handleSearch"
-        />
-      </div>
+		<!-- Основная область смайлов -->
+		<div class="smiles">
+			<!-- Поисковая строка -->
+			<div class="search">
+				<input
+					type="text"
+					v-model="search"
+					placeholder="Поиск"
+					class="content-inline search_smile_input"
+					@input="handleSearch"
+				/>
+			</div>
 
-      <!-- Список смайлов -->
-      <div class="list hiddenScroll">
-        <!-- Сообщение для пустых избранных -->
-        <template v-if="activeCategory === '-1' && currentSmiles.length === 0">
-          <div class="empty-favorites">Тут пока ничего нет.<br> Для добавления смайла в этот список нажмите по нему - ПКМ.</div>
-        </template>
-        
-        <!-- Список смайлов -->
-        <template v-else>
-          <div
-            class="smile"
-            v-for="smile of currentSmiles"
-            :key="smile.id"
-            @click="onSmile(smile)"
-            @mouseenter="hoveredSmile = smile.id"
-            @mouseleave="hoveredSmile = null"
-            @contextmenu.prevent="showContextMenu($event, smile)"
-            style="position: relative;"
-          >
-            <img 
-              :src="getSmileUrl(smile)" 
-              :alt="smile.title"
-              :title="smile.title"
-            />
-            
-            <!-- Кнопка избранного (звездочка) -->
-<!--            <span -->
-<!--              v-if="hoveredSmile === smile.id"-->
-<!--              class="favorite-star"-->
-<!--              :class="{ active: isFavorite(smile.id) }"-->
-<!--              @click.stop="toggleFavorite(smile.id)"-->
-<!--              style="position: absolute; top: 2px; right: 2px; cursor: pointer; font-size: 18px;"-->
-<!--              :title="isFavorite(smile.id) ? 'Убрать из избранного' : 'Добавить в избранное'"-->
-<!--            >-->
-<!--              {{ isFavorite(smile.id) ? '★' : '☆' }}-->
-<!--            </span>-->
-          </div>
-        </template>
-      </div>
-    </div>
-  </div>
+			<!-- Список смайлов -->
+			<div class="list hiddenScroll">
+				<!-- Сообщение для пустых избранных -->
+				<template v-if="activeCategory === FAVORITES_CATEGORY_ID && currentSmiles.length === 0">
+					<div class="empty-favorites">
+						Тут пока ничего нет.<br />
+						Для добавления смайла в этот список нажмите по нему — ПКМ.
+					</div>
+				</template>
 
-  <!-- Контекстное меню -->
-  <ContextMenu
-    :visible="contextMenu.visible"
-    :x="contextMenu.x"
-    :y="contextMenu.y"
-    :smile="contextMenu.smile"
-    :is-favorite="isFavorite"
-    @action="handleContextMenuAction"
-    @close="hideContextMenu"
-  />
+				<!-- Список смайлов -->
+				<template v-else>
+					<div
+						class="smile"
+						v-for="smile of currentSmiles"
+						:key="smile.id"
+						@click="props.onSmile(smile)"
+						@mouseenter="hoveredSmile = smile.id as string"
+						@mouseleave="hoveredSmile = null"
+						@contextmenu.prevent="showContextMenu($event, smile)"
+						style="position: relative"
+					>
+						<img :src="getSmileUrl(smile)" :alt="smile.title" :title="smile.title" />
+					</div>
+				</template>
+			</div>
+		</div>
+	</div>
+
+	<!-- Контекстное меню -->
+	<ContextMenu
+		:visible="contextMenu.visible"
+		:x="contextMenu.x"
+		:y="contextMenu.y"
+		:smile="contextMenu.smile"
+		:is-favorite="isFavorite"
+		@action="handleContextMenuAction"
+		@close="hideContextMenu"
+	/>
 </template>
 
 <script lang="ts" setup>
-import { onMounted, ref, computed, watch } from 'vue'
-import { getSmiles } from "../api"
-import { getSmileUrl } from "../utils"
-import { ISmile, ISmileCategory } from "../types"
-import ContextMenu from "./contextMenu.vue"
+	import { onMounted, ref, computed, watch } from "vue"
+	import { Smile, SmileCategory } from "../types"
+	import ContextMenu from "./contextMenu.vue"
+	import { getSmileUrl } from "../utils/getSmileUrl"
+	import { getSmiles } from "../api/getSmiles"
 
-// ===== ПРОПСЫ =====
-interface Props {
-  onSmile: (smile: ISmile) => void
-}
-const props = defineProps<Props>()
+	// ===== ПРОПСЫ =====
+	const props = defineProps<{
+		onSmile: (smile: Smile) => void
+	}>()
 
-// ===== РЕАКТИВНЫЕ ДАННЫЕ =====
-const search = ref('')
-const categories = ref<ISmileCategory[]>([])
-const smiles = ref<ISmile[]>([])
-const activeCategory = ref<string>("")
-const hoveredSmile = ref<string | null>(null)
-const favorites = ref<string[]>([])
-const contextMenu = ref({
-  visible: false,
-  x: 0,
-  y: 0,
-  smile: null as ISmile | null
-})
+	// ===== РЕАКТИВНЫЕ ДАННЫЕ =====
+	const search = ref<string>("")
+	const categories = ref<SmileCategory[]>([])
+	const smiles = ref<Smile[]>([])
+	const activeCategory = ref<string>("")
+	const hoveredSmile = ref<string | null>(null)
+	const favorites = ref<string[]>([])
+	const contextMenu = ref<{
+		visible: boolean
+		x: number
+		y: number
+		smile: Smile | null
+	}>({
+		visible: false,
+		x: 0,
+		y: 0,
+		smile: null,
+	})
 
-// ===== КОНСТАНТЫ =====
-const FAVORITES_KEY = 'smilesPanel_favorites'
-const LAST_CATEGORY_KEY = 'smilesPanel_lastCategory'
-const FAVORITES_CATEGORY_ID = '-1'
-const DEFAULT_CATEGORY_ID = '14'
+	// ===== КОНСТАНТЫ =====
+	const FAVORITES_KEY = "smilesPanel_favorites"
+	const LAST_CATEGORY_KEY = "smilesPanel_lastCategory"
+	const FAVORITES_CATEGORY_ID = "-1"
+	const DEFAULT_CATEGORY_ID = "14"
 
-// ===== ВЫЧИСЛЯЕМЫЕ СВОЙСТВА =====
-/**
- * Фильтрует смайлы на основе поискового запроса и активной категории
- */
-const currentSmiles = computed(() => {
-  const searchQuery = search.value.trim().toLowerCase()
-  
-  // Если есть поисковый запрос - фильтруем по нему
-  if (searchQuery) {
-    return smiles.value.filter(smile =>
-      smile.title.toLowerCase().includes(searchQuery)
-    )
-  }
-  
-  // Если выбрана категория избранного - показываем только избранные
-  if (activeCategory.value === FAVORITES_CATEGORY_ID) {
-    return smiles.value.filter(smile => favorites.value.includes(smile.id))
-  }
-  
-  // Если выбрана конкретная категория - фильтруем по ней
-  if (activeCategory.value) {
-    return smiles.value.filter(smile => smile.category_id === activeCategory.value)
-  }
-  
-  return []
-})
+	// ===== ВЫЧИСЛЯЕМЫЕ СВОЙСТВА =====
+	const currentSmiles = computed<Smile[]>(() => {
+		const searchQuery = search.value.trim().toLowerCase()
 
-// ===== МЕТОДЫ =====
-/**
- * Открывает категорию смайлов
- * @param categoryId - ID категории для открытия
- */
-function openCategory(categoryId: string): void {
-  activeCategory.value = categoryId
-  localStorage.setItem(LAST_CATEGORY_KEY, categoryId)
-}
+		if (searchQuery) {
+			return smiles.value.filter(smile =>
+				(smile.title as string).toLowerCase().includes(searchQuery)
+			)
+		}
 
-/**
- * Находит смайл по ID
- * @param id - ID смайла
- * @returns Найденный смайл или undefined
- */
-function findSmileById(id: string): ISmile | undefined {
-  return smiles.value.find(smile => smile.id === id)
-}
+		if (activeCategory.value === FAVORITES_CATEGORY_ID) {
+			return smiles.value.filter(smile => favorites.value.includes(smile.id as string))
+		}
 
-/**
- * Проверяет, находится ли смайл в избранном
- * @param smileId - ID смайла
- * @returns true если смайл в избранном
- */
-function isFavorite(smileId: string): boolean {
-  return favorites.value.includes(smileId)
-}
+		if (activeCategory.value) {
+			return smiles.value.filter(smile => smile.category_id === activeCategory.value)
+		}
 
-/**
- * Переключает состояние избранного для смайла
- * @param smileId - ID смайла
- */
-function toggleFavorite(smileId: string): void {
-  const index = favorites.value.indexOf(smileId)
-  
-  if (index === -1) {
-    // Добавляем в избранное
-    favorites.value.push(smileId)
-  } else {
-    // Убираем из избранного
-    favorites.value.splice(index, 1)
-  }
-  
-  // Сохраняем в localStorage
-  saveFavorites()
-}
+		return []
+	})
 
-/**
- * Показывает контекстное меню для смайла
- * @param event - Событие мыши
- * @param smile - Смайл для которого показывается меню
- */
-function showContextMenu(event: MouseEvent, smile: ISmile): void {
-  contextMenu.value = {
-    visible: true,
-    x: event.clientX,
-    y: event.clientY,
-    smile
-  }
-  
-}
+	// ===== МЕТОДЫ =====
+	function openCategory(categoryId: string): void {
+		activeCategory.value = categoryId
+		localStorage.setItem(LAST_CATEGORY_KEY, categoryId)
+	}
 
-/**
- * Скрывает контекстное меню
- */
-function hideContextMenu(): void {
-  contextMenu.value.visible = false
-  contextMenu.value.smile = null
-}
+	function findSmileById(id: string): Smile | undefined {
+		return smiles.value.find(smile => smile.id === id)
+	}
 
-/**
- * Обрабатывает действие контекстного меню
- * @param smile - Смайл для которого выполняется действие
- */
-function handleContextMenuAction(smile: ISmile): void {
-  toggleFavorite(smile.id)
-}
+	function isFavorite(smileId: string): boolean {
+		return favorites.value.includes(smileId)
+	}
 
-/**
- * Обработчик поиска с дебаунсом
- */
-function handleSearch(): void {
-  // Здесь можно добавить дебаунс если нужно
-  // Пока оставляем простую обработку
-}
+	function toggleFavorite(smileId: string): void {
+		const index = favorites.value.indexOf(smileId)
+		if (index === -1) {
+			favorites.value.push(smileId)
+		} else {
+			favorites.value.splice(index, 1)
+		}
+		saveFavorites()
+	}
 
-/**
- * Сохраняет избранные смайлы в localStorage
- */
-function saveFavorites(): void {
-  try {
-    localStorage.setItem(FAVORITES_KEY, JSON.stringify(favorites.value))
-  } catch (error) {
-    console.error('Ошибка сохранения избранных смайлов:', error)
-  }
-}
+	function showContextMenu(event: MouseEvent, smile: Smile): void {
+		contextMenu.value = {
+			visible: true,
+			x: event.clientX,
+			y: event.clientY,
+			smile,
+		}
+	}
 
-/**
- * Загружает избранные смайлы из localStorage
- */
-function loadFavorites(): void {
-  try {
-    const savedFavorites = localStorage.getItem(FAVORITES_KEY)
-    if (savedFavorites) {
-      favorites.value = JSON.parse(savedFavorites)
-    }
-  } catch (error) {
-    console.error('Ошибка загрузки избранных смайлов:', error)
-    favorites.value = []
-  }
-}
+	function hideContextMenu(): void {
+		contextMenu.value.visible = false
+		contextMenu.value.smile = null
+	}
 
-/**
- * Загружает последнюю активную категорию
- */
-function loadLastCategory(): void {
-  const lastCategory = localStorage.getItem(LAST_CATEGORY_KEY) || DEFAULT_CATEGORY_ID
-  openCategory(lastCategory)
-}
+	function handleContextMenuAction(smile: Smile): void {
+		toggleFavorite(smile.id as string)
+	}
 
-/**
- * Инициализирует данные смайлов
- */
-async function initializeSmiles(): Promise<void> {
-  try {
-    const smilesData = await getSmiles()
-    
-    if (smilesData) {
-      categories.value = smilesData.categories
-      smiles.value = smilesData.smiles
-      
-      // Добавляем категорию "Избранное" только если её ещё нет
-      const favoritesCategoryExists = categories.value.some(cat => cat.id === FAVORITES_CATEGORY_ID)
-      
-      if (!favoritesCategoryExists) {
-        categories.value.unshift({
-          id: FAVORITES_CATEGORY_ID, 
-          name: 'Избранное', 
-          img_tab_smile: '729'
-        })
-      }
-    }
-  } catch (error) {
-    console.error('Ошибка загрузки смайлов:', error)
-  }
-}
+	function handleSearch(): void {
+		// можно добавить debounce при необходимости
+	}
 
-// ===== ЖИЗНЕННЫЙ ЦИКЛ =====
-onMounted(async () => {
-  // Загружаем данные смайлов
-  await initializeSmiles()
-  
-  // Загружаем избранное
-  loadFavorites()
-  
-  // Загружаем последнюю активную категорию
-  loadLastCategory()
-})
+	function saveFavorites(): void {
+		try {
+			localStorage.setItem(FAVORITES_KEY, JSON.stringify(favorites.value))
+		} catch (error) {
+			console.error("Ошибка сохранения избранных смайлов:", error)
+		}
+	}
 
-// ===== ВАТЧЕРЫ =====
-// Автоматически сохраняем избранное при изменении
-watch(favorites, () => {
-  saveFavorites()
-}, { deep: true })
+	function loadFavorites(): void {
+		try {
+			const saved = localStorage.getItem(FAVORITES_KEY)
+			if (saved) {
+				const parsed = JSON.parse(saved)
+				if (Array.isArray(parsed)) favorites.value = parsed
+			}
+		} catch (error) {
+			console.error("Ошибка загрузки избранных смайлов:", error)
+			favorites.value = []
+		}
+	}
+
+	function loadLastCategory(): void {
+		const last = localStorage.getItem(LAST_CATEGORY_KEY) || DEFAULT_CATEGORY_ID
+		openCategory(last)
+	}
+
+	async function initializeSmiles(): Promise<void> {
+		try {
+			const smilesData = await getSmiles()
+
+			if (smilesData) {
+				categories.value = smilesData.categories
+				smiles.value = smilesData.smiles
+
+				const hasFavorites = categories.value.some(cat => cat.id === FAVORITES_CATEGORY_ID)
+
+				if (!hasFavorites) {
+					categories.value.unshift({
+						id: FAVORITES_CATEGORY_ID,
+						name: "Избранное",
+						img_tab_smile: "729",
+					})
+				}
+			}
+		} catch (error) {
+			console.error("Ошибка загрузки смайлов:", error)
+		}
+	}
+
+	// ===== ЖИЗНЕННЫЙ ЦИКЛ =====
+	onMounted(async () => {
+		await initializeSmiles()
+		loadFavorites()
+		loadLastCategory()
+	})
+
+	// ===== ВАТЧЕРЫ =====
+	watch(favorites, saveFavorites, { deep: true })
 </script>
