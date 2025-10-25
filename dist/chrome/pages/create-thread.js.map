@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../../src/pages/create-thread.ts"],
-  "sourcesContent": ["import { initTinyMcePlugins } from \"../utils/initTinyMcePlugins\"\n\nexport default async function () {\n\tinitTinyMcePlugins()\n}\n"],
-  "mappings": ";;;;;;;;;;AAEA,eAAO,wBAA0B;AAChC,qBAAmB;AACpB;",
-  "names": []
-}

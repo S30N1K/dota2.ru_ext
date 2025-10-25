@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../src/extension/injected.ts"],
-  "sourcesContent": ["import { DatabaseTables } from \"../types\"\nimport { InjectedMessage } from \"./utils/communication\"\n\nwindow.addEventListener(\"FROM_CONTENT_SCRIPT\", async (event: any) => {\n\tconst message = event.detail as InjectedMessage\n\n\tswitch (message.type) {\n\t\tcase \"LOADED\": {\n\t\t\tconst data = message.payload as {\n\t\t\t\textensionUrl: string\n\t\t\t\tdatabase: DatabaseTables\n\t\t\t}\n\t\t\tconst loader = await import(data.extensionUrl + \"pages/loader.js\")\n\t\t\tloader?.default(data)\n\t\t}\n\t}\n})\n"],
-  "mappings": ";;;AAGA,SAAO,iBAAiB,uBAAuB,OAAO,UAAe;AACpE,UAAM,UAAU,MAAM;AAEtB,YAAQ,QAAQ,MAAM;AAAA,MACrB,KAAK,UAAU;AACd,cAAM,OAAO,QAAQ;AAIrB,cAAM,SAAS,MAAM,OAAO,KAAK,eAAe;AAChD,gBAAQ,QAAQ,IAAI;AAAA,MACrB;AAAA,IACD;AAAA,EACD,CAAC;",
-  "names": []
-}
