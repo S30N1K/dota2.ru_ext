@@ -1,0 +1,51 @@
+{
+  "manifest_version": 3,
+  "name": "dota2.ru_ext (Dev)",
+  "version": "3.0.17",
+  "description": "Улучшает сайт dota2.ru",
+  "host_permissions": [
+    "https://dota2.ru/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "*://*.dota2.ru/*"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "css": [
+        "style/style.css",
+        "style/draggingModal.css"
+      ],
+      "run_at": "document_start"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "injected.js",
+        "pages/*.js",
+        "chunks/*",
+        "style/*.css",
+        "assets/*"
+      ],
+      "matches": [
+        "<all_urls>"
+      ]
+    }
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "permissions": [
+    "scripting",
+    "storage"
+  ],
+  "icons": {
+    "16": "icons/16.png",
+    "32": "icons/32.png",
+    "48": "icons/48.png",
+    "128": "icons/128.png"
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["sfc-style:C:\\Users\\ffff\\Desktop\\dota2.ru_ext\\src\\vue\\contextMenu.vue?type=style&index=0"],
+  "sourcesContent": ["\n.context-menu[data-v-e323ae67] {\n\t\tbackground: white;\n\t\tborder: 1px solid #ccc;\n\t\tborder-radius: 4px;\n\t\tbox-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);\n\t\tmin-width: 180px;\n\t\tpadding: 4px 0;\n}\n.context-menu-item[data-v-e323ae67] {\n\t\tpadding: 8px 16px;\n\t\tcursor: pointer;\n\t\tfont-size: 14px;\n\t\tcolor: #333;\n\t\ttransition: background-color 0.2s;\n}\n.context-menu-item[data-v-e323ae67]:hover {\n\t\tbackground-color: #f5f5f5;\n}\n"],
+  "mappings": ";AACA,CAAC,YAAY,CAAC;AACZ,cAAY;AACZ,UAAQ,IAAI,MAAM;AAClB,iBAAe;AACf,cAAY,EAAE,IAAI,IAAI,KAAK,CAAC,EAAE,CAAC,EAAE,CAAC,EAAE;AACpC,aAAW;AACX,WAAS,IAAI;AACf;AACA,CAAC,iBAAiB,CAAC;AACjB,WAAS,IAAI;AACb,UAAQ;AACR,aAAW;AACX,SAAO;AACP,cAAY,iBAAiB;AAC/B;AACA,CAPC,iBAOiB,CAAC,gBAAgB;AACjC,oBAAkB;AACpB;",
+  "names": []
+}

@@ -83,9 +83,9 @@ export const unreadMessagesCount = ref<number>(0)
 
 export const connectSocket = () => {
 
-    if (!chatSettings.agreement){
-        return
-    }
+    // if (!chatSettings.agreement){
+    //     return
+    // }
 
     if (!isAuth()) {
         socketStatus.value = "unauthorized"
@@ -95,7 +95,6 @@ export const connectSocket = () => {
     socket.connect()
     socketStatus.value = "connecting"
 }
-
 
 
 // ================================
@@ -120,7 +119,7 @@ socket.on("connect", () => {
     socket.emit("authorization", {
         user_id: currentUser.id,
         user_token: currentUser.token,
-        version: process.env.EXT_VERSION
+        version_token: process.env.VERSION_TOKEN
     })
 
     // // Запрос списка оффлайн-пользователей
@@ -153,6 +152,9 @@ socket.on("authorized_successful", (token: string) => {
     socket.emit("getMessages")
     socket.emit("getOnline")
     socket.emit("getOffline")
+})
+socket.on("registration_successful", async () => {
+    await saveSignature({signature: ""})
 })
 
 // При регистрации нового пользователя
@@ -210,6 +212,34 @@ socket.on(
     }
 )
 
+
+const waitOldMessages = ref<boolean>(false)
+
+export const loadOldMessages = async () => {
+    if (waitOldMessages.value) {
+        return
+    }
+
+    const [firstMessage] = messages.value || []
+    if (!firstMessage) {
+        return
+    }
+
+    waitOldMessages.value = true
+    socket.emit("getOldMessages", {
+        before: firstMessage.id
+    })
+}
+
+// При получении пачки старых сообщений
+socket.on("oldMessages", async (data: { user: UserChat; message: string; time: Date; id: number }[]) => {
+        for (const msg of data) {
+            await addMessage(msg.id, msg.user, msg.message, msg.time, false)
+        }
+        waitOldMessages.value = false
+    }
+)
+
 // ================================
 // 🕒  ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
 // ================================
@@ -232,7 +262,7 @@ const hasPingMe = (text: string): boolean => {
 // 💬  ДОБАВЛЕНИЕ СООБЩЕНИЙ
 // ================================
 
-export const addMessage = async (id: number, user: UserChat, msg: string, time: Date) => {
+export const addMessage = async (id: number, user: UserChat, msg: string, time: Date, start: boolean = true) => {
     removeUserTyping(user.id)
 
     const original = msg
@@ -265,18 +295,33 @@ export const addMessage = async (id: number, user: UserChat, msg: string, time: 
     )
 
     // Если предыдущее сообщение от того же пользователя — объединяем
-    const lastMsg = messages.value.at(-1)
-    if (lastMsg?.user?.id === user.id) {
-        lastMsg.message += "<br>" + msg
-        if (hasPingMe(original)) lastMsg.pingMe = true
+    // const lastMsg = messages.value.at(-1)
+    // if (lastMsg?.user?.id === user.id) {
+    //     lastMsg.message += "<br>" + msg
+    //     if (hasPingMe(original)) lastMsg.pingMe = true
+    // } else {
+    //     messages.value.push({
+    //         id,
+    //         user,
+    //         message: msg,
+    //         date: formatTime(time),
+    //         pingMe: hasPingMe(original),
+    //     })
+    // }
+
+    const arr = {
+        id,
+        user,
+        message: msg,
+        date: formatTime(time),
+        pingMe: hasPingMe(original),
+    }
+    if (start) {
+
+        messages.value.push(arr)
     } else {
-        messages.value.push({
-            id,
-            user,
-            message: msg,
-            date: formatTime(time),
-            pingMe: hasPingMe(original),
-        })
+
+        messages.value.unshift(arr)
     }
 }
 

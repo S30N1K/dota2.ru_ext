@@ -85,7 +85,7 @@
 				return "Соединение потеряно"
 			}
       case "error": {
-				return "Ошибка соеденения"
+				return "Ошибка соединения"
 			}
       case "registration_error": {
         return "Ошибка регистрации"
