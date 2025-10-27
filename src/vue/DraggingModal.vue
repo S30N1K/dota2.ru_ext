@@ -5,16 +5,16 @@
           v-show="state.isOpen"
           class="fw-window"
           :class="{
-					fullscreen: state.isFullscreen,
-					'fw-dragging': state.isDragging,
-					'fw-resizing': state.isResizing,
-				}"
+          fullscreen: state.isFullscreen,
+          'fw-dragging': state.isDragging,
+          'fw-resizing': state.isResizing,
+        }"
           :style="{
-					top: state.y + 'px',
-					left: state.x + 'px',
-					width: state.width + 'px',
-					height: state.height + 'px',
-				}"
+          top: state.y + 'px',
+          left: state.x + 'px',
+          width: state.width + 'px',
+          height: state.height + 'px',
+        }"
       >
         <header class="fw-header">
           <div class="fw-title" @mousedown="onDragStart" @touchstart.prevent="onTouchStart">
@@ -26,7 +26,7 @@
         </header>
 
         <div class="fw-body">
-          <slot/>
+          <slot />
         </div>
 
         <!-- Resize zones -->
@@ -50,11 +50,14 @@
         ></div>
       </div>
     </transition>
+
+    <!-- Overlay при ресайзе -->
+    <div v-if="state.isResizing" class="fw-resize-overlay"></div>
   </Teleport>
 </template>
 
 <script lang="ts" setup>
-import {reactive, ref, onMounted, onBeforeUnmount} from "vue"
+import { reactive, ref, onMounted, onBeforeUnmount } from "vue"
 
 interface Props {
   draggable?: boolean
@@ -63,7 +66,6 @@ interface Props {
   minHeight?: number
   defaultOpen?: boolean
 
-  // состояния
   x?: number
   y?: number
   width?: number
@@ -106,14 +108,14 @@ const state = reactive({
   isOpen: props.open !== undefined ? props.open : props.defaultOpen,
 })
 
-const prevSize = ref({width: 0, height: 0})
-const prevPos = ref({x: 0, y: 0})
-const dragOffset = ref({x: 0, y: 0})
+const prevSize = ref({ width: 0, height: 0 })
+const prevPos = ref({ x: 0, y: 0 })
+const dragOffset = ref({ x: 0, y: 0 })
 let dragFrame = 0
 let resizeFrame = 0
 let resizeDir: "right" | "bottom" | "corner" | null = null
 
-// --- emit helpers ---
+// emit helpers
 function emitState() {
   emit("update:x", state.x)
   emit("update:y", state.y)
@@ -128,16 +130,13 @@ function open() {
   state.isOpen = true
   emit("update:open", true)
 }
-
 function close() {
   state.isOpen = false
   emit("update:open", false)
 }
-
 function toggle() {
   setOpen(!state.isOpen)
 }
-
 function setOpen(val: boolean) {
   state.isOpen = val
   emit("update:open", val)
@@ -172,8 +171,8 @@ function toggleFullscreen() {
 function setFullscreen(val: boolean) {
   if (val === state.isFullscreen) return
   if (val) {
-    prevSize.value = {width: state.width, height: state.height}
-    prevPos.value = {x: state.x, y: state.y}
+    prevSize.value = { width: state.width, height: state.height }
+    prevPos.value = { x: state.x, y: state.y }
     state.x = 0
     state.y = 0
     state.width = window.innerWidth
@@ -205,7 +204,7 @@ function onTouchStart(e: TouchEvent) {
 // --- Mouse Drag ---
 function startDrag(e: MouseEvent) {
   state.isDragging = true
-  dragOffset.value = {x: e.clientX - state.x, y: e.clientY - state.y}
+  dragOffset.value = { x: e.clientX - state.x, y: e.clientY - state.y }
   window.addEventListener("mousemove", onDrag)
   window.addEventListener("mouseup", stopDrag)
 }
@@ -233,7 +232,7 @@ function stopDrag() {
 function startTouchDrag(e: TouchEvent) {
   state.isDragging = true
   const touch = e.touches[0]
-  dragOffset.value = {x: touch.clientX - state.x, y: touch.clientY - state.y}
+  dragOffset.value = { x: touch.clientX - state.x, y: touch.clientY - state.y }
   window.addEventListener("touchmove", onTouchDrag)
   window.addEventListener("touchend", stopTouchDrag)
 }

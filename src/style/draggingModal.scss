@@ -29,8 +29,7 @@
   overflow: hidden;
   user-select: none;
   z-index: 999;
-  transition: width 0.25s ease,
-  height 0.25s ease; /* resize/fullscreen анимация */
+  transition: width 0.25s ease, height 0.25s ease;
   will-change: top, left, width, height, transform;
   -webkit-box-shadow: 0px 0px 15px 5px #000000;
   box-shadow: 0px 0px 15px 5px #000000;
@@ -38,7 +37,7 @@
 
 .fw-window.fw-dragging,
 .fw-window.fw-resizing {
-  transition: none !important; /* мгновенный drag/resize */
+  transition: none !important;
 }
 
 .fw-window.fullscreen {
@@ -67,8 +66,6 @@
 
 .fw-buttons {
   display: flex;
-  // align-items: center;
-  // gap: 6px;
   margin-right: 3px;
 
   button {
@@ -93,7 +90,6 @@
 .fw-body {
   flex: 1;
   overflow: auto;
-  // padding: 10px;
 }
 
 /* Resize zones */
@@ -122,4 +118,18 @@
   bottom: 0;
   left: 0;
   cursor: s-resize;
+}
+
+/* Overlay при ресайзе */
+.fw-resize-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  cursor: default;
+  z-index: 998;
+  background: transparent;
+  user-select: none;
+  touch-action: none;
 }
