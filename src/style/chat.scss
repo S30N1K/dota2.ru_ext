@@ -98,6 +98,10 @@
           position: relative;
 
 
+          &.highlight {
+            animation: highlight-fade 2s ease-out;
+          }
+
           &:hover {
             background: #0c0c0c;
 
@@ -108,9 +112,9 @@
 
           .reply {
             border-left: 3px solid #0c0c0c;
-            padding: 5px;
-            padding-left: 10px;
+            padding: 5px 5px 5px 10px;
             font-size: smaller;
+            cursor: pointer;
 
             .reply_user {
               font-weight: bold;
@@ -126,10 +130,10 @@
           }
 
           &.removed {
-            background: #e74c3c;
+            background: #e74c3c12;
 
             &:hover {
-              background: #e74c3c;
+              background: #e74c3c12;
             }
           }
 
@@ -148,10 +152,11 @@
 
             button {
               padding: 5px;
+              font-size: small;
 
               img {
-                width: 22px;
-                height: 22px;
+                width: 20px;
+                height: 20px;
               }
 
               &:hover {
@@ -161,7 +166,7 @@
           }
 
           &.pingMe {
-            background: #2e2927;
+            background: #2e292752;
           }
 
           .text {
@@ -220,6 +225,15 @@
         font-size: 13px;
       }
     }
+  }
+}
+
+@keyframes highlight-fade {
+  0% {
+    background-color: #3b5a60; /* начальный цвет подсветки */
+  }
+  100% {
+    background-color: transparent; /* исчезает */
   }
 }
 

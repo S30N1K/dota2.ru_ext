@@ -21,7 +21,7 @@
 		</div>
 
     <div class="quote" v-if="quoteMessage">
-      <div>
+      <div @click="emit('scrollToMessage', quoteMessage.id)">
         Ответ на сообщение пользователя <span>{{ quoteMessage.user.nickname }}</span>
       </div>
       <button @click="quoteMessage = null">
@@ -46,6 +46,7 @@
   import {quoteMessage, unreadMessagesCount, usersTyping} from "./socket"
 	import { getExtUrl } from "../../utils/getExtUrl"
 	import { declineWord } from "../../utils/declineWord"
+  import {Message} from "esbuild";
 
 	const props = defineProps<{
 		scrolledToBottom: boolean
@@ -54,6 +55,7 @@
 	const emit = defineEmits<{
 		insertSmile: [smile: Smile]
 		scrollToBottom: []
+    scrollToMessage: [number]
 	}>()
 
 	const chatInput = ref<InstanceType<typeof ChatInput> | null>(null)

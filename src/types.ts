@@ -35,12 +35,15 @@ export interface ChatMessage {
     id: number
     user: Pick<User, "id" | "nickname" | "avatar">
     message: string
-    date: string
+    time: string | Date
     pingMe: boolean
     removed: boolean
     reply: null | {
         user: Pick<User, "id" | "nickname" | "avatar">
-        message: string
+        message: {
+            id: number,
+            message: string
+        }
     }
 }
 

@@ -49,7 +49,8 @@
 				<ChatFooter
 					v-if="!isValidConnected"
 					:scrolled-to-bottom="scrolledToBottom"
-					@scroll-to-bottom="scrollToBottomSmooth"
+					@scrollToBottom="scrollToBottomSmooth"
+          @scrollToMessage="scrollToMessage"
 					ref="chatFooter"
 				/>
 			</div>
@@ -125,6 +126,11 @@
 	const scrollToBottomSmooth = () => {
 		messageList.value?.scrollToBottomSmooth()
 	}
+
+	const scrollToMessage = (message_id: number) => {
+		messageList.value?.scrollToMessage(message_id, "smooth", "center")
+	}
+
 
 	const toggle = () => {
 		modal.value?.toggle()

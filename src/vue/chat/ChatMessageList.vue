@@ -20,7 +20,7 @@
               @click="$emit('insertUser', group.user)"
           >
             {{ group.user.nickname }}
-            <span class="time">{{ group.messages[0].date }}</span>
+            <span class="time">{{ group.messages[0].time }}</span>
           </span>
 
           <div
@@ -32,6 +32,10 @@
               v-show="!msg.removed || msg.removed && currentUser.id === msg.user.id"
           >
             <div class="buttons" :class="{indent: chatSettings.openOnline}">
+              <button>
+                <img :src="getExtUrl('assets/ignored.svg')" alt=""/>
+                {{ msg.id }}
+              </button>
               <button v-if="currentUser.id !== group.user.id" @click="quote(msg)">
                 <img :src="getExtUrl('assets/arrowUturnLeft.svg')" alt="Цитировать"/>
               </button>
@@ -42,9 +46,9 @@
                 <img :src="getExtUrl('assets/remove.svg')" alt="Удалить"/>
               </button>
             </div>
-            <div class="reply" v-if="msg.reply">
+            <div class="reply" v-if="msg.reply" @click="scrollToMessage(msg.reply.message.id, 'smooth', 'center')">
               <div class="reply_user"><span>{{ msg.reply?.user.nickname }}</span> сказал(а)</div>
-              <div class="reply_message">{{ msg.reply.message }}</div>
+              <div class="reply_message" v-html="msg.reply?.message.message"></div>
             </div>
             <span class="text" v-html="msg.message"></span>
           </div>
@@ -113,7 +117,7 @@ const isScrolledToBottom = () => {
 const isScrolledToTop = () => {
   if (!messagesContainer.value) return false
   const {scrollTop} = messagesContainer.value
-  return scrollTop <= 300
+  return scrollTop < 10
 }
 
 const onScroll = async (event: any) => {
@@ -122,8 +126,8 @@ const onScroll = async (event: any) => {
   else if (scrollTop < lastScrollTop.value) scrollDirection.value = "up"
   lastScrollTop.value = Math.max(scrollTop, 0)
 
+  scrolledToBottom.value = isScrolledToBottom()
   if (scrollDirection.value === "down") {
-    scrolledToBottom.value = isScrolledToBottom()
     if (scrolledToBottom.value) unreadMessagesCount.value = 0
   } else if (scrollDirection.value === "up") {
     scrolledToTop.value = isScrolledToTop()
@@ -151,20 +155,29 @@ const scrollToBottomSmooth = () => {
   })
 }
 
-socket.on("newMessage", async (data: {
-  user: UserChat; message: string; time: Date; id: number
-  removed: boolean;
-  reply: null | {
-    user: {
-      id: number,
-      nickname: string,
-      avatar: string
-    }, message: string
+const scrollToMessage = (message_id: number, behavior: "smooth" | "auto", block: "start" | "end" | "center") => {
+  const message = document.querySelector(`#chat_message_${message_id}`)
+
+  if (!message) {
+    return
   }
-}) => {
-  const {user, message, time, id} = data
+
+  message.scrollIntoView({
+    behavior, block
+  })
+
+  message.classList.add("highlight")
+
+  message.addEventListener('animationend', () => {
+    message.classList.remove('highlight');
+  }, {once: true});
+
+}
+
+// Пришло новое сообщение
+socket.on("newMessage", async (data: ChatMessage) => {
   const shouldScroll = isScrolledToBottom()
-  await addMessage(id, user, message, time, data.removed, data.reply)
+  await addMessage(data)
   unreadMessagesCount.value++
   if (shouldScroll) scrollToBottom()
 })
@@ -188,95 +201,27 @@ const loadOldMessages = async () => {
   })
 }
 
-// При получении пачки старых сообщений
-
-
-// ---- helpers: якорь до/после рендера ----
-const captureAnchor = () => {
-  const c = messagesContainer.value
-  if (!c) return null
-
-  const containerTop = c.getBoundingClientRect().top
-  // Берём первый элемент, который пересекает текущий scrollTop (реально "на экране")
-  const items = Array.from(c.querySelectorAll<HTMLDivElement>('.message'))
-  const anchorEl = items.find(el => {
-    const top = el.offsetTop
-    const bottom = top + el.offsetHeight
-    return bottom > c.scrollTop // нижняя грань ниже линии прокрутки
-  }) || items[0] // fallback — самый верхний
-
-  if (!anchorEl) return null
-
-  const dy = anchorEl.getBoundingClientRect().top - containerTop
-  return { id: anchorEl.id, dy }
-}
-
-const restoreAnchor = (anchor: { id: string; dy: number } | null) => {
-  const c = messagesContainer.value
-  if (!c || !anchor) return
-
-  const containerTop = c.getBoundingClientRect().top
-  const el = c.querySelector<HTMLElement>(`#${anchor.id}`)
-  if (!el) return
-
-  // насколько сместился тот же элемент после рендера
-  const newDy = el.getBoundingClientRect().top - containerTop
-  const delta = newDy - anchor.dy
-  // компенсируем смещение
-  c.scrollTop += delta
-}
-
-socket.on("oldMessages", async (data: {
-  user: UserChat;
-  message: string;
-  time: Date;
-  id: number;
-  removed: boolean, reply: null | {
-    user: {
-      id: number,
-      nickname: string,
-      avatar: string
-    }, message: string
-  }
-}[]) => {
-
-
-  const c = messagesContainer.value
-  if (!c || !data?.length) return
-
-  // 1) фиксируем якорь ДО изменения списка
-  const anchor = captureAnchor()
+// Пришла пачка старых сообщений
+socket.on("oldMessages", async (data: ChatMessage[]) => {
 
   waitOldMessages.value = true
 
-  // 2) добавляем старые сообщения (ВАЖНО: в правильном порядке и именно в начало!)
-  // если addMessage сам делает unshift при флаге, воспользуйтесь им.
-  // Иначе — добавьте вручную:
-  for (let i = data.length - 1; i >= 0; i--) {
-    const msg = data[i]
-    // последний аргумент = prepend. Убедитесь, что addMessage поддерживает это:
-    await addMessage(msg.id, msg.user, msg.message, msg.time, msg.removed, msg.reply, /*prepend=*/false)
+  const [firstMessage] = messages.value || []
+
+  for (const message of data.reverse()) {
+    await addMessage(message, false)
   }
 
-  // 3) ждём рендер
   await nextTick()
 
-  // 4) восстанавливаем положение
-  restoreAnchor(anchor)
+  if (firstMessage) {
+    scrollToMessage(firstMessage.id, "auto", "start")
+  }
+
+  await nextTick()
 
   waitOldMessages.value = false
 
-
-  // waitOldMessages.value = true
-  //
-  // // Добавляем старые сообщения в начало
-  // for (const msg of data) {
-  //   await addMessage(msg.id, msg.user, msg.message, msg.time, msg.removed, msg.reply, false)
-  // }
-  //
-  // await nextTick()
-  //
-  // waitOldMessages.value = false
 })
 
 
@@ -286,5 +231,6 @@ defineExpose({
   isScrolledToBottom,
   messagesContainer,
   scrolledToBottom,
+  scrollToMessage,
 })
 </script>

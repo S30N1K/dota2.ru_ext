@@ -206,22 +206,9 @@ socket.on("typing", (data: UserChat) => handleUserTyping(data))
 // При получении пачки сообщений
 socket.on(
     "messages",
-    async (data: {
-        user: UserChat;
-        message: string;
-        time: Date;
-        id: number;
-        removed: boolean;
-        reply: null | {
-            user: {
-                id: number,
-                nickname: string,
-                avatar: string
-            }, message: string
-        }
-    }[]) => {
+    async (data: ChatMessage[]) => {
         for (const msg of data) {
-            await addMessage(msg.id, msg.user, msg.message, msg.time, msg.removed, msg.reply)
+            await addMessage(msg)
         }
     }
 )
@@ -238,7 +225,6 @@ socket.on(
 )
 
 
-
 // ================================
 // 🕒  ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
 // ================================
@@ -251,82 +237,58 @@ const formatTime = (date: Date) => {
     return `${h}:${m}`
 }
 
-/** Проверка, есть ли в тексте упоминание текущего пользователя */
-const hasPingMe = (text: string): boolean => {
-    const regex = new RegExp(`\\[user\\|${currentUser.id}\\|[^\\]]+\\]`, "g")
-    return regex.test(text)
-}
 
-// ================================
-// 💬  ДОБАВЛЕНИЕ СООБЩЕНИЙ
-// ================================
+export const formatMessage = async (message: ChatMessage) => {
 
-export const addMessage = async (id: number, user: UserChat, msg: string, time: Date, removed: boolean, reply: null | {
-    user: {
-        id: number,
-        nickname: string,
-        avatar: string
-    }, message: string
-}, start: boolean = true) => {
-    removeUserTyping(user.id)
-
-    const original = msg
-
-    // Убираем HTML и парсим
     const parser = new DOMParser()
-    const doc = parser.parseFromString(msg, "text/html")
-    msg = doc.body.textContent || ""
+    const doc = parser.parseFromString(message.message, "text/html")
+    message.message = doc.body.textContent || ""
+
+    if (message.reply?.user.id === currentUser.id || new RegExp(`\\[user\\|${currentUser.id}\\|[^\\]]+\\]`, "g").test(message.message)) {
+        message.pingMe = true
+    }
+
+    message.time = formatTime(new Date(message.time))
 
     // Убираем лишние переносы строк
-    msg = msg.replace(/(\[br\]){3,}/g, "[br][br]").replace(/\[br\]/g, "<br>")
+    message.message = message.message.replace(/(\[br\]){3,}/g, "[br][br]").replace(/\[br\]/g, "<br>")
 
     // Эмодзи [smile|ID]
-    const smileMatches = [...msg.matchAll(/\[smile\|(\d+)\]/g)]
+    const smileMatches = [...message.message.matchAll(/\[smile\|(\d+)\]/g)]
     for (const match of smileMatches) {
         const id = match[1]
         const smile = await findSmileById(id)
         if (smile?.filename) {
             const path = `/img/forum/emoticons/${getFileName(smile.filename)}`
             const tag = `<img class="emoji" data-id="${id}" src="${path}" alt="${smile.symbol}">`
-            msg = msg.replace(match[0], tag)
+            message.message = message.message.replace(match[0], tag)
         }
     }
 
     // Упоминания [user|id|nickname]
-    msg = msg.replace(
+    message.message = message.message.replace(
         /\[user\|(\d+)\|([^\]]+)\]/g,
         (_, id, nickname) =>
             `<a class='user-tag' target='_blank' href='/forum/members/${nickname}.${id}'>${nickname}</a>`
     )
 
-    // Если предыдущее сообщение от того же пользователя — объединяем
-    // const lastMsg = messages.value.at(-1)
-    // if (lastMsg?.user?.id === user.id) {
-    //     lastMsg.message += "<br>" + msg
-    //     if (hasPingMe(original)) lastMsg.pingMe = true
-    // } else {
-    //     messages.value.push({
-    //         id,
-    //         user,
-    //         message: msg,
-    //         date: formatTime(time),
-    //         pingMe: hasPingMe(original),
-    //     })
-    // }
 
-    const arr: ChatMessage = {
-        id,
-        user,
-        message: msg,
-        date: formatTime(time),
-        pingMe: hasPingMe(original),
-        removed: removed,
-        reply: reply
+    return message
+}
+
+export const addMessage = async (message: ChatMessage, start: boolean = true) => {
+    removeUserTyping(message.user.id)
+
+    message = await formatMessage(message)
+
+    if (message.reply?.message){
+        message.reply.message.message = (await formatMessage(message.reply.message as ChatMessage)).message
     }
+
     if (start) {
-        messages.value.push(arr)
+        messages.value.push(message)
     } else {
-        messages.value.unshift(arr)
+        messages.value.unshift(message)
     }
 }
 
