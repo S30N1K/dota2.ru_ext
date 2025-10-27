@@ -1,98 +1,96 @@
 // === Импорт модулей ===
 import * as esbuild from "esbuild";
-import {
-    readFileSync,
-    writeFileSync,
-    mkdirSync,
-    cpSync,
-    rmSync,
-    existsSync,
-    readdirSync
-} from "fs";
-import {resolve, relative} from "path";
-import {compile} from "sass";
+import { readFileSync, writeFileSync, mkdirSync, cpSync, rmSync, existsSync, readdirSync } from "fs";
+import { resolve, relative } from "path";
+import { compile } from "sass";
 import chokidar from "chokidar";
-import {WebSocketServer} from "ws";
+import { WebSocketServer } from "ws";
 import vuePlugin from "esbuild-plugin-vue3";
+import os from "os";
 
 // === Константы проекта ===
-const packageJson = JSON.parse(readFileSync(resolve(process.cwd(), "package.json"), "utf8"));
-const EXT_NAME = packageJson.name;
-const EXT_VERSION = packageJson.version;
+const pkg = JSON.parse(readFileSync(resolve("package.json"), "utf8"));
+const { name: EXT_NAME, version: EXT_VERSION } = pkg;
+
 const WEBSOCKET_PORT = 5899;
-const CHAT_URL = "ws://localhost:5569";
-const VERSION_TOKEN = "llutNoShhOFnwlZASEDztQs"
+const CHAT_URL = "neuravoid.online:5569";
+const VERSION_TOKEN = "llutNoShhOFnwlZASEDztQs";
 
 type BrowserTarget = "chrome" | "firefox";
 type BuildMode = "dev" | "production";
 
+const TARGET = (process.argv[2] as BrowserTarget) || "chrome";
+const MODE = (process.argv[3] as BuildMode) || "production";
+const IS_DEV = MODE === "dev";
+
+if (!["chrome", "firefox"].includes(TARGET)) throw new Error("TARGET: chrome | firefox");
+if (!["dev", "production"].includes(MODE)) throw new Error("MODE: dev | production");
+
 export class Builder {
-    private target: BrowserTarget;
-    private mode: BuildMode;
-    private IS_DEV: boolean;
-    private distDir: string;
+    private distDir = resolve(`dist/${TARGET}`);
     private jsContexts = new Map<string, esbuild.BuildContext>();
     private wss: WebSocketServer | null = null;
+    private concurrency = Math.max(1, os.cpus().length - 1);
 
-    constructor(target: BrowserTarget, mode: BuildMode = "production") {
-        if (!["chrome", "firefox"].includes(target))
-            throw new Error("Укажи целевой браузер: chrome или firefox");
-        if (!["dev", "production"].includes(mode))
-            throw new Error("Режим должен быть dev или production");
-
-        this.target = target;
-        this.mode = mode;
-        this.IS_DEV = mode === "dev";
-        this.distDir = resolve(process.cwd(), `dist/${target}`);
-
+    constructor() {
         this.cleanDist();
     }
 
     /** 🧹 Очистка dist директории */
     private cleanDist() {
-        if (existsSync(this.distDir)) rmSync(this.distDir, {recursive: true, force: true});
-        mkdirSync(this.distDir, {recursive: true});
+        rmSync(this.distDir, { recursive: true, force: true });
+        mkdirSync(this.distDir, { recursive: true });
     }
 
-    /** 🎨 Компиляция SCSS в CSS */
-    private buildScss(file?: string) {
-        const styleDir = resolve(process.cwd(), "src/style");
-        const files = file
-            ? [file]
-            : existsSync(styleDir)
-                ? readdirSync(styleDir).filter(f => f.endsWith(".scss"))
-                : [];
-        if (files.length === 0) return;
+    /** 🎨 Компиляция SCSS → CSS (исправлено с поддержкой импортов) */
+    private buildScss(changedFile?: string) {
+        const srcDir = resolve("src/style");
+        if (!existsSync(srcDir)) return;
 
-        const cssOutputDir = resolve(this.distDir, "style");
-        mkdirSync(cssOutputDir, {recursive: true});
+        const outDir = resolve(this.distDir, "style");
+        mkdirSync(outDir, { recursive: true });
 
-        for (const scssFile of files) {
-            const scssPath = resolve(styleDir, scssFile);
-            const cssFileName = scssFile.replace(/^.*[\\/]/, "").replace(".scss", ".css");
-            const outPath = resolve(cssOutputDir, cssFileName);
-
+        const compileFile = (inFile: string) => {
+            const rel = relative(srcDir, inFile);
+            const outFile = resolve(outDir, rel.replace(/\.scss$/, ".css"));
             try {
-                const scss = compile(scssPath);
-                writeFileSync(outPath, scss.css);
-                this.log(`🎨 SCSS скомпилирован: ${scssPath} → ${outPath}`);
-            } catch (err) {
-                console.error(`❌ Ошибка компиляции ${scssPath}:`, err);
+                const result = compile(inFile, {
+                    loadPaths: [srcDir],
+                    style: IS_DEV ? "expanded" : "compressed"
+                });
+                mkdirSync(resolve(outFile, ".."), { recursive: true });
+                writeFileSync(outFile, result.css);
+                this.log(`🎨 SCSS → ${relative(process.cwd(), outFile)}`);
+            } catch (e) {
+                console.error(`❌ Ошибка SCSS: ${inFile}`, e);
             }
+        };
+
+        // Если изменился импорт (файл с _), пересобираем все SCSS
+        if (!changedFile || changedFile.includes("_")) {
+            const files = readdirSync(srcDir)
+                .filter(f => f.endsWith(".scss") && !f.startsWith("_"))
+                .map(f => resolve(srcDir, f));
+            for (const f of files) compileFile(f);
+            return;
         }
+
+        // Если изменился конкретный файл
+        if (changedFile.endsWith(".scss") && changedFile.startsWith(srcDir))
+            compileFile(changedFile);
     }
 
     /** ⚙️ Сборка JS с помощью esbuild */
     private async buildJs() {
-        const baseOptions: esbuild.BuildOptions = {
+        const base: esbuild.BuildOptions = {
             bundle: true,
-            minify: !this.IS_DEV,
-            sourcemap: this.IS_DEV,
+            minify: !IS_DEV,
+            sourcemap: IS_DEV,
             target: ["chrome108", "firefox120"],
             resolveExtensions: [".vue", ".ts", ".js", ".json"],
             define: {
-                "process.env.NODE_ENV": JSON.stringify(this.mode),
-                "process.env.LOG_LEVEL": JSON.stringify(this.IS_DEV ? "debug" : "warn"),
+                "process.env.NODE_ENV": JSON.stringify(MODE),
+                "process.env.LOG_LEVEL": JSON.stringify(IS_DEV ? "debug" : "warn"),
                 "process.env.WEBSOCKET_PORT": JSON.stringify(WEBSOCKET_PORT),
                 "process.env.EXT_NAME": JSON.stringify(EXT_NAME),
                 "process.env.EXT_VERSION": JSON.stringify(EXT_VERSION),
@@ -101,207 +99,167 @@ export class Builder {
             },
             plugins: [
                 vuePlugin({
-                    compilerOptions: {
-                        isCustomElement: (tag: string) => tag.startsWith("custom-")
-                    }
-                }) as unknown as esbuild.Plugin
+                    compilerOptions: { isCustomElement: (t: string) => t.startsWith("custom-") }
+                }) as any
             ]
         };
 
-        // Точки входа для разных частей расширения
-        const builds: Record<string, esbuild.BuildOptions> = {
-            injected: {
-                ...baseOptions,
-                entryPoints: ["src/extension/injected.ts"],
-                outfile: resolve(this.distDir, "injected.js"),
-                format: "iife"
-            },
-            content: {
-                ...baseOptions,
-                entryPoints: ["src/extension/content.ts"],
-                outfile: resolve(this.distDir, "content.js"),
-                format: "esm"
-            },
-            background: {
-                ...baseOptions,
-                entryPoints: ["src/extension/background.ts"],
-                outfile: resolve(this.distDir, "background.js"),
-                format: "iife"
-            }
+        const entries = {
+            injected: "src/extension/injected.ts",
+            content: "src/extension/content.ts",
+            background: "src/extension/background.ts"
         };
 
-        // === Сборка страниц + loader (общие чанки) ===
-        const pagesDir = resolve(process.cwd(), "src/pages");
-        const pageFiles = existsSync(pagesDir)
-            ? readdirSync(pagesDir)
-                .filter(f => f.endsWith(".ts"))
-                .map(f => resolve(pagesDir, f))
+        // 🧩 Базовые сборки
+        const builds: esbuild.BuildOptions[] = Object.entries(entries).map(([name, entry]) => ({
+            ...base,
+            entryPoints: [entry],
+            outfile: resolve(this.distDir, `${name}.js`),
+            format: name === "content" ? "esm" : "iife"
+        }));
+
+        // 📄 Страницы и loader
+        const pagesDir = resolve("src/pages");
+        const pages = existsSync(pagesDir)
+            ? readdirSync(pagesDir).filter(f => f.endsWith(".ts")).map(f => resolve(pagesDir, f))
             : [];
+        const loader = resolve("src/extension/loader.ts");
+        if (existsSync(loader)) pages.push(loader);
 
-        // Добавляем loader.ts, если он есть
-        const loaderPath = resolve(process.cwd(), "src/extension/loader.ts");
-        const entryPoints = [...pageFiles];
-        if (existsSync(loaderPath)) {
-            entryPoints.push(loaderPath);
-        }
-
-        const pagesOptions: esbuild.BuildOptions = {
-            ...baseOptions,
-            entryPoints,
+        const pagesBuild: esbuild.BuildOptions = {
+            ...base,
+            entryPoints: pages,
             outdir: resolve(this.distDir, "pages"),
-            format: "esm",
             splitting: true,
             chunkNames: "chunks/[name]-[hash]",
-            entryNames: "[name]"
+            entryNames: "[name]",
+            format: "esm"
         };
 
-        // === Dev режим (watch через esbuild context API) ===
-        if (this.IS_DEV) {
-            for (const [key, options] of Object.entries(builds)) {
-                const ctx = await (esbuild as any).context(options) as esbuild.BuildContext;
+        if (IS_DEV) {
+            // 🧠 Инкрементальная пересборка
+            for (const [i, opts] of builds.entries()) {
+                const ctx = await (esbuild as any).context(opts);
                 await ctx.watch();
-                this.jsContexts.set(key, ctx);
+                this.jsContexts.set(Object.keys(entries)[i], ctx);
             }
-
-            if (entryPoints.length) {
-                const ctx = await (esbuild as any).context(pagesOptions) as esbuild.BuildContext;
+            if (pages.length) {
+                const ctx = await (esbuild as any).context(pagesBuild);
                 await ctx.watch();
                 this.jsContexts.set("pages", ctx);
             }
+            this.log("👀 JS watch активирован (incremental)");
+        } else {
+            // 🧵 Параллельная сборка
+            const queue = [...builds, ...(pages.length ? [pagesBuild] : [])];
+            const runChunk = async (chunk: esbuild.BuildOptions[]) =>
+                await Promise.all(chunk.map(cfg => esbuild.build(cfg)));
 
-            this.log("👀 JS watch активирован (ESBuild context API)");
-        }
-        // === Production сборка (обычная) ===
-        else {
-            for (const options of Object.values(builds)) {
-                await esbuild.build(options);
+            for (let i = 0; i < queue.length; i += this.concurrency) {
+                const chunk = queue.slice(i, i + this.concurrency);
+                await runChunk(chunk);
             }
-            if (entryPoints.length) await esbuild.build(pagesOptions);
-            this.log("✅ JS сборка завершена");
+
+            this.log(`✅ JS сборка завершена (параллельно ×${this.concurrency})`);
         }
     }
 
-    /** 🧾 Генерация manifest.json */
+    /** 🧾 Manifest.json */
     private buildManifest() {
-        const manifestPath = resolve(process.cwd(), "src/extension/manifest.json");
-        const baseManifest = JSON.parse(readFileSync(manifestPath, "utf8"));
+        const manifest = JSON.parse(readFileSync(resolve("src/extension/manifest.json"), "utf8"));
+        manifest.version = EXT_VERSION;
+        if (IS_DEV) manifest.name += " (Dev)";
+        if (TARGET === "firefox") manifest.browser_specific_settings = { gecko: { id: "addon@dota2ru-helper" } };
+        manifest.web_accessible_resources = [{
+            resources: ["injected.js", "pages/*.js", "chunks/*", "style/*.css", "assets/*"],
+            matches: ["<all_urls>"]
+        }];
 
-        baseManifest.version = EXT_VERSION;
-
-        if (this.IS_DEV) baseManifest.name += " (Dev)";
-        if (this.target === "firefox") {
-            baseManifest.browser_specific_settings = {
-                gecko: {id: "addon@dota2ru-helper"}
-            };
-        }
-
-        baseManifest.web_accessible_resources = [
-            {
-                resources: ["injected.js", "pages/*.js", "chunks/*", "style/*.css", "assets/*"],
-                matches: ["<all_urls>"]
-            }
-        ];
-
-        const outPath = resolve(this.distDir, "manifest.json");
-        writeFileSync(outPath, JSON.stringify(baseManifest, null, 2));
-        this.log(`📜 Manifest сгенерирован → ${outPath}`);
+        const out = resolve(this.distDir, "manifest.json");
+        writeFileSync(out, JSON.stringify(manifest, null, 2));
+        this.log("📜 Manifest →", relative(process.cwd(), out));
     }
 
-    /** 📦 Копирование ассетов (иконок и ресурсов) */
+    /** 📦 Копирование ассетов */
     private copyAssets(file?: string) {
-        const iconsSrc = resolve(process.cwd(), "src/extension/icons");
+        const copyDir = (src: string, dest: string) => {
+            if (existsSync(src)) cpSync(src, dest, { recursive: true });
+        };
+
+        const iconsSrc = resolve("src/extension/icons");
+        const assetsSrc = resolve("src/assets");
         const iconsDest = resolve(this.distDir, "icons");
-        const assetsSrc = resolve(process.cwd(), "src/assets");
         const assetsDest = resolve(this.distDir, "assets");
 
-        if (file) {
-            const abs = resolve(file);
-            if (abs.startsWith(iconsSrc)) {
-                const rel = relative(iconsSrc, abs);
-                const dest = resolve(iconsDest, rel);
-                mkdirSync(resolve(dest, ".."), {recursive: true});
-                cpSync(abs, dest);
-                this.log(`🖼️ Иконка обновлена → ${dest}`);
-            } else if (abs.startsWith(assetsSrc)) {
-                const rel = relative(assetsSrc, abs);
-                const dest = resolve(assetsDest, rel);
-                mkdirSync(resolve(dest, ".."), {recursive: true});
-                cpSync(abs, dest);
-                this.log(`📦 Asset обновлён → ${dest}`);
-            }
-        } else {
-            if (existsSync(iconsSrc)) cpSync(iconsSrc, iconsDest, {recursive: true});
-            if (existsSync(assetsSrc)) cpSync(assetsSrc, assetsDest, {recursive: true});
+        if (!file) {
+            copyDir(iconsSrc, iconsDest);
+            copyDir(assetsSrc, assetsDest);
             this.log("📦 Ассеты скопированы");
+            return;
         }
+
+        const abs = resolve(file);
+        const updateFile = (srcDir: string, destDir: string, label: string) => {
+            if (abs.startsWith(srcDir)) {
+                const rel = relative(srcDir, abs);
+                const dest = resolve(destDir, rel);
+                mkdirSync(resolve(dest, ".."), { recursive: true });
+                cpSync(abs, dest);
+                this.log(`${label} обновлён → ${rel}`);
+            }
+        };
+
+        updateFile(iconsSrc, iconsDest, "🖼️ Icon");
+        updateFile(assetsSrc, assetsDest, "📦 Asset");
     }
 
-    /** 🔌 Запуск WebSocket сервера для live reload */
+    /** 🔌 WebSocket сервер для live reload */
     private startDevServer() {
-        if (!this.IS_DEV) return;
-
-        this.wss = new WebSocketServer({port: WEBSOCKET_PORT});
-        this.wss.on("connection", ws => {
-            this.log("📡 Клиент подключён к WebSocket серверу");
-            ws.send(JSON.stringify({type: "connected"}));
-        });
-
-        this.log(`📡 WebSocket сервер запущен на ws://localhost:${WEBSOCKET_PORT}`);
+        if (!IS_DEV) return;
+        this.wss = new WebSocketServer({ port: WEBSOCKET_PORT });
+        this.wss.on("connection", ws => ws.send(JSON.stringify({ type: "connected" })));
+        this.log(`📡 WebSocket запущен: ws://localhost:${WEBSOCKET_PORT}`);
     }
 
-    /** 🚀 Основная сборка проекта */
+    /** 🚀 Основная сборка */
     public async build() {
+        const start = Date.now();
         this.buildScss();
         await this.buildJs();
         this.buildManifest();
         this.copyAssets();
-        this.log(`🎯 Сборка завершена для ${this.target} [${this.mode}]`);
+        this.log(`🎯 Сборка завершена для ${TARGET} [${MODE}] за ${(Date.now() - start) / 1000}s`);
 
-        if (this.IS_DEV) {
+        if (IS_DEV) {
             this.startDevServer();
             this.watchFiles();
         }
     }
 
-    /** 👀 Отслеживание изменений файлов */
+    /** 👀 Watcher */
     private watchFiles() {
-        const srcDir = resolve(process.cwd(), "src");
-
-        chokidar.watch(srcDir, {ignoreInitial: true}).on("all", async (_event, path) => {
+        chokidar.watch("src", { ignoreInitial: true }).on("all", (_evt, path) => {
             if (!path) return;
+            if (path.endsWith(".scss")) this.buildScss(path);
+            else if (path.endsWith("manifest.json")) this.buildManifest();
+            else if (path.includes("/assets/") || path.includes("/icons/")) this.copyAssets(path);
 
-            if (path.endsWith(".scss")) {
-                this.buildScss(path);
-            } else if (path.endsWith(".json") && path.includes("manifest.json")) {
-                this.buildManifest();
-            } else if (path.includes("/assets/") || path.includes("/icons/")) {
-                this.copyAssets(path);
-            }
-
-            // Отправляем reload всем клиентам через WebSocket
-            if (this.IS_DEV && this.wss) {
-                for (const client of this.wss.clients) {
-                    if (client.readyState === client.OPEN) {
-                        client.send(JSON.stringify({type: "reload", file: path}));
-                    }
-                }
-                this.log(`↻ Reload отправлен → ${path}`);
+            if (IS_DEV && this.wss) {
+                for (const c of this.wss.clients)
+                    if (c.readyState === c.OPEN)
+                        c.send(JSON.stringify({ type: "reload", file: path }));
+                this.log(`↻ Reload → ${path}`);
             }
         });
     }
 
-    /** 🪵 Простой логгер */
-    public log(...args: any[]) {
+    private log(...args: any[]) {
         console.log("📄", ...args);
     }
 }
 
-// === Запуск билда ===
-const target = (process.argv[2] as BrowserTarget) || "chrome";
-const mode = (process.argv[3] as BuildMode) || "production";
-
-const builder = new Builder(target, mode);
-builder.build().catch(err => {
-    console.error("❌ Ошибка при сборке:", err);
+// === Запуск ===
+new Builder().build().catch(err => {
+    console.error("❌ Ошибка сборки:", err);
     process.exit(1);
 });

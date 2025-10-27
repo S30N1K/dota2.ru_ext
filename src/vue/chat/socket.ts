@@ -76,6 +76,7 @@ export const usersOnline = ref<UserChat[]>([])
 export const usersOffline = ref<UserChat[]>([])
 export const messages = ref<ChatMessage[]>([])
 export const unreadMessagesCount = ref<number>(0)
+export const quoteMessage = ref<ChatMessage | null>(null)
 
 // ================================
 // 🚀  ПОДКЛЮЧЕНИЕ
@@ -205,40 +206,38 @@ socket.on("typing", (data: UserChat) => handleUserTyping(data))
 // При получении пачки сообщений
 socket.on(
     "messages",
-    async (data: { user: UserChat; message: string; time: Date; id: number }[]) => {
+    async (data: {
+        user: UserChat;
+        message: string;
+        time: Date;
+        id: number;
+        removed: boolean;
+        reply: null | {
+            user: {
+                id: number,
+                nickname: string,
+                avatar: string
+            }, message: string
+        }
+    }[]) => {
         for (const msg of data) {
-            await addMessage(msg.id, msg.user, msg.message, msg.time)
+            await addMessage(msg.id, msg.user, msg.message, msg.time, msg.removed, msg.reply)
         }
     }
 )
 
+socket.on(
+    "updateRemovedMessage",
+    async (data: { message_id: number, removed: boolean }) => {
+        const message = messages.value.find(e => e.id === data.message_id)
 
-const waitOldMessages = ref<boolean>(false)
+        if (!message) return
 
-export const loadOldMessages = async () => {
-    if (waitOldMessages.value) {
-        return
-    }
-
-    const [firstMessage] = messages.value || []
-    if (!firstMessage) {
-        return
-    }
-
-    waitOldMessages.value = true
-    socket.emit("getOldMessages", {
-        before: firstMessage.id
-    })
-}
-
-// При получении пачки старых сообщений
-socket.on("oldMessages", async (data: { user: UserChat; message: string; time: Date; id: number }[]) => {
-        for (const msg of data) {
-            await addMessage(msg.id, msg.user, msg.message, msg.time, false)
-        }
-        waitOldMessages.value = false
+        message.removed = data.removed
     }
 )
+
+
 
 // ================================
 // 🕒  ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
@@ -262,7 +261,13 @@ const hasPingMe = (text: string): boolean => {
 // 💬  ДОБАВЛЕНИЕ СООБЩЕНИЙ
 // ================================
 
-export const addMessage = async (id: number, user: UserChat, msg: string, time: Date, start: boolean = true) => {
+export const addMessage = async (id: number, user: UserChat, msg: string, time: Date, removed: boolean, reply: null | {
+    user: {
+        id: number,
+        nickname: string,
+        avatar: string
+    }, message: string
+}, start: boolean = true) => {
     removeUserTyping(user.id)
 
     const original = msg
@@ -309,18 +314,18 @@ export const addMessage = async (id: number, user: UserChat, msg: string, time: 
     //     })
     // }
 
-    const arr = {
+    const arr: ChatMessage = {
         id,
         user,
         message: msg,
         date: formatTime(time),
         pingMe: hasPingMe(original),
+        removed: removed,
+        reply: reply
     }
     if (start) {
-
         messages.value.push(arr)
     } else {
-
         messages.value.unshift(arr)
     }
 }

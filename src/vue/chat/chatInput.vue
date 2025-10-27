@@ -35,7 +35,7 @@
 <script setup lang="ts">
 	import { ref } from "vue"
 	import { UserChat, Smile, SearchUser } from "../../types"
-	import { socket } from "./socket"
+  import {quoteMessage, socket} from "./socket"
 	import { currentUser } from "../../storage"
 	import { getSmiles } from "../../api/getSmiles"
 	import { searchUser } from "../../api/searchUser"
@@ -433,7 +433,10 @@
 		socket.emit("sendMessage", {
 			user_token: currentUser.token,
 			message: text,
+      reply: quoteMessage.value?.id
 		})
+
+    quoteMessage.value = null
 
 		editor.value.innerHTML = ""
 		trigger.value = null

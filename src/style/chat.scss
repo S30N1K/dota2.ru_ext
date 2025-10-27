@@ -19,6 +19,7 @@
         display: flex;
         align-items: center;
         justify-content: center;
+
         button {
           margin-top: 20px;
           background: #363636;
@@ -48,58 +49,130 @@
     padding-right: 5px;
     scroll-behavior: smooth;
 
-    .message {
+    .message-group {
       display: flex;
       align-items: flex-start;
       gap: 8px;
       padding: 6px 10px;
       position: relative;
 
-      &.pingMe {
-        background: #2e2927;
-      }
-
       .avatar {
         width: 40px;
         height: 40px;
         border-radius: 50%;
         flex-shrink: 0;
-        position: sticky;
-        top: 8px; /* насколько «прилипает» сверху */
-        align-self: flex-start;
-        z-index: 2; /* чтобы не перекрывал текст */
-        transition: transform 0.2s ease-out,
-        opacity 0.2s ease-out;
+        z-index: 3;
       }
 
-      .content {
+      /* липкая аватарка для всей группы */
+      .sticky-avatar {
+        position: sticky;
+        top: 8px;
+        align-self: flex-start;
+      }
+
+      .group-content {
         display: flex;
         flex-direction: column;
         flex: 1;
         min-width: 0;
+        transition: padding-left 0.2s ease;
 
         .username {
-          font-weight: 400;
+          font-weight: 500;
           color: #81a1c1;
-          margin-bottom: 2px;
+          margin-bottom: 4px;
+          display: flex;
+          align-items: center;
+          gap: 6px;
 
           .time {
             font-size: 10px;
             color: #777;
-            margin-left: 6px;
           }
         }
 
-        .text {
-          color: #d8dee9;
-          line-height: 1.35;
-          word-break: break-word;
-          font-size: 14px;
+        .message {
+          padding-left: 0;
+          margin-bottom: 2px;
+          position: relative;
 
-          .emoji {
+
+          &:hover {
+            background: #0c0c0c;
+
+            .buttons {
+              visibility: visible;
+            }
+          }
+
+          .reply {
+            border-left: 3px solid #0c0c0c;
+            padding: 5px;
+            padding-left: 10px;
+            font-size: smaller;
+
+            .reply_user {
+              font-weight: bold;
+
+              span {
+                color: #81a1c1;
+              }
+            }
+
+            .reply_message {
+              color: gray;
+            }
+          }
+
+          &.removed {
+            background: #e74c3c;
+
+            &:hover {
+              background: #e74c3c;
+            }
+          }
+
+          .buttons {
+            display: flex;
+            background: #323232;
+            border-radius: 6px;
+            visibility: hidden;
+            position: absolute;
+            top: -15px;
+            right: 40px;
+
+            &.indent {
+              right: 200px;
+            }
+
+            button {
+              padding: 5px;
+
+              img {
+                width: 22px;
+                height: 22px;
+              }
+
+              &:hover {
+                background: #2c2c2c;
+              }
+            }
+          }
+
+          &.pingMe {
+            background: #2e2927;
+          }
+
+          .text {
+            color: #d8dee9;
+            line-height: 1.35;
+            word-break: break-word;
+            font-size: 14px;
           }
         }
       }
+
     }
 
     .plug {
@@ -244,6 +317,30 @@
 
       span:nth-child(3) {
         animation-delay: 0.4s;
+      }
+    }
+  }
+
+  .quote {
+    background: black;
+    padding: 10px;
+    color: #757575;
+    font-size: 13px;
+    display: flex;
+
+    div {
+      flex: 1;
+
+      span {
+        color: #81a1c1;
+      }
+    }
+
+    button {
+      img {
+        display: flex;
+        width: 20px;
+        height: 20px;
       }
     }
   }

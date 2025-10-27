@@ -4,6 +4,9 @@ import { InjectedMessage } from "./utils/communication"
 window.addEventListener("FROM_CONTENT_SCRIPT", async (event: any) => {
 	const message = event.detail as InjectedMessage
 
+    console.log(332, message)
+    console.log(message.type)
+
 	switch (message.type) {
 		case "LOADED": {
 			const data = message.payload as {

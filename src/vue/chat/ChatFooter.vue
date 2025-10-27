@@ -20,6 +20,15 @@
 			</span>
 		</div>
 
+    <div class="quote" v-if="quoteMessage">
+      <div>
+        Ответ на сообщение пользователя <span>{{ quoteMessage.user.nickname }}</span>
+      </div>
+      <button @click="quoteMessage = null">
+        <img :src="getExtUrl('assets/close.svg')" alt="отмена"/>
+      </button>
+    </div>
+
 		<div class="editor">
 			<ChatInput ref="chatInput" />
 			<button class="smile-btn" @click="toggleSmilesPanel">
@@ -34,7 +43,7 @@
 	import ChatInput from "./chatInput.vue"
 	import { Smile } from "../../types"
 	import NewSmilesPanel from "../newSmilesPanel.vue"
-	import { unreadMessagesCount, usersTyping } from "./socket"
+  import {quoteMessage, unreadMessagesCount, usersTyping} from "./socket"
 	import { getExtUrl } from "../../utils/getExtUrl"
 	import { declineWord } from "../../utils/declineWord"
 
