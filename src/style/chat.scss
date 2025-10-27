@@ -62,6 +62,10 @@
         border-radius: 50%;
         flex-shrink: 0;
         z-index: 3;
+
+        &:hover {
+          cursor: pointer;
+        }
       }
 
       /* липкая аватарка для всей группы */
@@ -144,10 +148,10 @@
             visibility: hidden;
             position: absolute;
             top: -15px;
-            right: 40px;
+            right: 20px;
 
             &.indent {
-              right: 200px;
+              //right: 200px;
             }
 
             button {
@@ -185,13 +189,49 @@
     }
   }
 
-  .onlineUsers {
+  .chatNotifications {
     position: absolute;
+    background: #1e1e1e;
     top: 0;
     right: 0;
     width: 200px;
     height: 100%;
-    background-color: #2a2a2a;
+    border-bottom: 1px solid #0e0e0e;
+    border-left: 1px solid #0e0e0e;
+    border-bottom-left-radius: 5px;
+    overflow-y: auto;
+    z-index: 3;
+
+    .notification {
+      padding: 10px;
+
+      .user {
+        display: flex;
+
+        img {
+          width: 24px;
+          height: 24px;
+          border-radius: 50%;
+        }
+
+        .nickname {
+          font-weight: bold;
+        }
+      }
+
+      .message {
+
+      }
+    }
+  }
+
+  .onlineUsers {
+    //position: absolute;
+    background: #1e1e1e;
+    top: 0;
+    right: 0;
+    width: 200px;
+    height: 100%;
     border-bottom: 1px solid #0e0e0e;
     border-left: 1px solid #0e0e0e;
     border-bottom-left-radius: 5px;
@@ -403,4 +443,83 @@
 .slide-right-enter-from,
 .slide-right-leave-to {
   transform: translateX(200px);
+}
+
+
+.hover-card {
+  position: fixed;
+  width: 220px;
+  background: #1e1e1e;
+  color: #eaeaea;
+  border-radius: 12px;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.5);
+  padding: 16px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  opacity: 0.95;
+  pointer-events: auto;
+
+  .avatar {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 2px solid #2e8bff;
+    margin-bottom: 8px;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  }
+
+  .nickname {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+
+  .info {
+    font-size: 0.85rem;
+    text-align: center;
+    color: #aaa;
+    margin-bottom: 10px;
+    line-height: 1.3;
+  }
+
+  .actions {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    width: 100%;
+
+    button {
+      background: #2b2b2b;
+      color: #eaeaea;
+      border: 1px solid #3a3a3a;
+      border-radius: 8px;
+      padding: 6px 10px;
+      cursor: pointer;
+      transition: background 0.2s;
+
+      &:hover {
+        background: #3a3a3a;
+      }
+    }
+  }
+}
+
+/* Анимация */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+  transform: translateY(5px);
 }

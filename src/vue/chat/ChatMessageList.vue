@@ -1,4 +1,5 @@
 <template>
+<!--  <ChatUserCard ref="userCard"/>-->
   <div class="messages" ref="messagesContainer" @scroll="onScroll">
     <transition-group name="fade-up" tag="div">
       <!-- Группы сообщений по пользователю -->
@@ -8,15 +9,19 @@
           class="message-group"
       >
         <img
+
             class="avatar sticky-avatar"
             :src="group.user.avatar"
             :alt="group.user.nickname"
         />
 
+
         <div class="group-content">
           <!-- ник + дата первого сообщения -->
           <span
               class="username"
+              @mouseenter="onHoverUser($event, group.user)"
+              @mouseleave="hideCard"
               @click="$emit('insertUser', group.user)"
           >
             {{ group.user.nickname }}
@@ -67,6 +72,8 @@ import {ChatMessage, UserChat} from "../../types"
 import {addMessage, messages, quoteMessage, socket, unreadMessagesCount} from "./socket"
 import {getExtUrl} from "../../utils/getExtUrl";
 import {chatSettings, currentUser} from "../../storage";
+import ChatUserCard from "./ChatUserCard.vue";
+import DraggingModal from "../DraggingModal.vue";
 
 defineEmits<{ insertUser: [user: UserChat] }>()
 
@@ -77,6 +84,15 @@ const scrolledToTop = ref(true)
 const scrolledToBottom = ref(true)
 const lastScrollTop = ref(0)
 const scrollDirection = ref<scrollDirection>(null)
+const userCard = ref<InstanceType<typeof ChatUserCard> | null>(null)
+
+const onHoverUser = (e: MouseEvent, user: UserChat) => {
+  userCard.value?.showAt(10 /*e.clientX*/, e.clientY - 80, user)
+}
+
+function hideCard() {
+  userCard.value?.hide()
+}
 
 const quote = (message: ChatMessage) => {
   quoteMessage.value = message

@@ -84,9 +84,9 @@ export const quoteMessage = ref<ChatMessage | null>(null)
 
 export const connectSocket = () => {
 
-    // if (!chatSettings.agreement){
-    //     return
-    // }
+    if (!chatSettings.agreement){
+        return
+    }
 
     if (!isAuth()) {
         socketStatus.value = "unauthorized"
@@ -238,7 +238,7 @@ const formatTime = (date: Date) => {
 }
 
 
-export const formatMessage = async (message: ChatMessage) => {
+export const formatMessage = async (message: ChatMessage): Promise<ChatMessage> => {
 
     const parser = new DOMParser()
     const doc = parser.parseFromString(message.message, "text/html")

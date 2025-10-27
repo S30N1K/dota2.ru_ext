@@ -13,8 +13,9 @@
 		<template #buttons>
 			<ChatHeader
 				:is-valid-connected="!isValidConnected"
-				@toggle-online-list="chatSettings.openOnline = !chatSettings.openOnline"
-				@toggle-fullscreen="modal?.toggleFullscreen()"
+				@toggleOnlineList="chatSettings.openOnline = !chatSettings.openOnline"
+				@toggleFullscreen="modal?.toggleFullscreen()"
+        @toggleEnvelopeList="envelopeIsOpen = !envelopeIsOpen"
 				@close="modal?.close()"
 			/>
 		</template>
@@ -38,6 +39,8 @@
 				<!-- Основной чат -->
 				<div v-show="!isValidConnected" class="chatContainer">
 					<ChatMessageList @insert-user="chatFooter?.insertUser" ref="messageList" />
+
+          <ChatNotifications :isOpen="envelopeIsOpen"/>
 
 					<UsersList
 						@insert-user="chatFooter?.insertUser"
@@ -68,6 +71,7 @@
 	import { chatSettings } from "../../storage"
 	import { extLogger } from "../../logger"
   import {connectSocket, socketStatus} from "./socket"
+  import ChatNotifications from "./ChatNotifications.vue";
 
 	const log = new extLogger("vue/Chat.vue")
 
@@ -111,6 +115,7 @@
 	const messageList = ref<InstanceType<typeof ChatMessageList> | null>(null)
 	const onlineList = ref<InstanceType<typeof UsersList> | null>(null)
 	const chatFooter = ref<InstanceType<typeof ChatFooter> | null>(null)
+  const envelopeIsOpen = ref<boolean>(false)
 
 
 	// === вычисления ===

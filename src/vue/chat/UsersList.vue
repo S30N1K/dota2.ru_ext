@@ -22,7 +22,7 @@
           class="onlineUser"
           @click="$emit('insertUser', user)"
       >
-        <img class="avatar" :src="user.avatar"/>
+        <img class="avatar" :src="user.avatar" alt=""/>
         <span>{{ user.nickname }}</span>
       </div>
 
