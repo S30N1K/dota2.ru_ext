@@ -1,5 +1,5 @@
 <template>
-<!--  <ChatUserCard ref="userCard"/>-->
+  <!--  <ChatUserCard ref="userCard"/>-->
   <div class="messages" ref="messagesContainer" @scroll="onScroll">
     <transition-group name="fade-up" tag="div">
       <!-- Группы сообщений по пользователю -->
@@ -20,9 +20,7 @@
           <!-- ник + дата первого сообщения -->
           <span
               class="username"
-              @mouseenter="onHoverUser($event, group.user)"
-              @mouseleave="hideCard"
-              @click="$emit('insertUser', group.user)"
+              @click="$emit('openUserProfile', $event, group.user)"
           >
             {{ group.user.nickname }}
             <span class="time">{{ group.messages[0].time }}</span>
@@ -72,10 +70,11 @@ import {ChatMessage, UserChat} from "../../types"
 import {addMessage, messages, quoteMessage, socket, unreadMessagesCount} from "./socket"
 import {getExtUrl} from "../../utils/getExtUrl";
 import {chatSettings, currentUser} from "../../storage";
-import ChatUserCard from "./ChatUserCard.vue";
-import DraggingModal from "../DraggingModal.vue";
 
-defineEmits<{ insertUser: [user: UserChat] }>()
+defineEmits<{
+  insertUser: [user: UserChat]
+  openUserProfile: [event: MouseEvent, user: UserChat]
+}>()
 
 type scrollDirection = "up" | "down" | null
 
@@ -84,15 +83,14 @@ const scrolledToTop = ref(true)
 const scrolledToBottom = ref(true)
 const lastScrollTop = ref(0)
 const scrollDirection = ref<scrollDirection>(null)
-const userCard = ref<InstanceType<typeof ChatUserCard> | null>(null)
-
-const onHoverUser = (e: MouseEvent, user: UserChat) => {
-  userCard.value?.showAt(10 /*e.clientX*/, e.clientY - 80, user)
-}
-
-function hideCard() {
-  userCard.value?.hide()
-}
+//
+// const onHoverUser = (e: MouseEvent, user: UserChat) => {
+//   userCard.value?.showAt(10 /*e.clientX*/, e.clientY - 80, user)
+// }
+//
+// function hideCard() {
+//   userCard.value?.hide()
+// }
 
 const quote = (message: ChatMessage) => {
   quoteMessage.value = message

@@ -2,7 +2,7 @@
   <transition name="slide-right">
     <div class="chatNotifications" v-show="isOpen">
       <div class="notification" v-for="notification in notifications" :key="notification.id">
-        <div class="user">
+        <div class="user" @click="$emit('openUserProfile', $event, notification.user)">
           <img :src="notification.user.avatar" alt=""/>
           <span class="nickname">{{ notification.user.nickname }}</span>
         </div>
@@ -15,13 +15,18 @@
 
 <script setup lang="ts">
 import {watch, ref} from 'vue'
-import {formatMessage, socket} from "./socket";
+import {formatMessage, socket, unreadNotificationsCount} from "./socket";
 import {currentUser} from "../../storage";
-import {ChatMessage} from "../../types";
+import {ChatMessage, UserChat} from "../../types";
 
 const props = defineProps<{
   isOpen: boolean
 }>()
+
+defineEmits<{
+  openUserProfile: [event: MouseEvent, user: UserChat]
+}>()
+
 
 const notifications = ref<ChatMessage[]>([])
 
@@ -44,6 +49,7 @@ watch(
     async (newVal) => {
       if (newVal) {
         await load()
+        unreadNotificationsCount.value = 0
       }
     }
 )

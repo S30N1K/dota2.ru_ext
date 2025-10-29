@@ -5,6 +5,7 @@
   </button>
   <button v-if="isValidConnected" class="users-btn" @click="$emit('toggleEnvelopeList')">
     <img :src="getExtUrl('assets/envelope.svg')" alt=""/>
+    <span v-if="unreadNotificationsCount > 0">{{unreadNotificationsCount}}</span>
   </button>
   <button v-if="isValidConnected" @click="$emit('toggleFullscreen')">
     <img
@@ -22,7 +23,7 @@
 
 <script setup lang="ts">
 import {computed} from "vue"
-import {usersOnline} from "./socket"
+import {unreadNotificationsCount, usersOnline} from "./socket"
 import {chatSettings} from "../../storage"
 import {getExtUrl} from "../../utils/getExtUrl"
 

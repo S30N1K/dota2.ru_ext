@@ -8,9 +8,9 @@
           v-for="user in usersOnline"
           :key="user.id"
           class="onlineUser"
-          @click="$emit('insertUser', user)"
+          @click="$emit('openUserProfile', $event, user)"
       >
-        <img class="avatar" :src="user.avatar"/>
+        <img class="avatar" :src="user.avatar" alt=""/>
         <span>{{ user.nickname }}</span>
       </div>
 
@@ -20,7 +20,7 @@
           v-for="user in usersOffline"
           :key="user.id"
           class="onlineUser"
-          @click="$emit('insertUser', user)"
+          @click="$emit('openUserProfile', $event, user)"
       >
         <img class="avatar" :src="user.avatar" alt=""/>
         <span>{{ user.nickname }}</span>
@@ -37,7 +37,10 @@ import {UserChat} from "../../types"
 import {chatSettings} from "../../storage";
 
 
-const emit = defineEmits<{ insertUser: [user: UserChat] }>()
+defineEmits<{
+  openUserProfile: [event: MouseEvent, user: UserChat]
+  insertUser: [user: UserChat]
+}>()
 
 const onlineContainer = ref<HTMLElement | null>(null)
 

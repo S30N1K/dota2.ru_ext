@@ -194,7 +194,7 @@
     background: #1e1e1e;
     top: 0;
     right: 0;
-    width: 200px;
+    width: 400px;
     height: 100%;
     border-bottom: 1px solid #0e0e0e;
     border-left: 1px solid #0e0e0e;
@@ -204,6 +204,14 @@
 
     .notification {
       padding: 10px;
+
+      &:nth-child(odd) {
+        background-color: #1a1a1a; // нечетные
+      }
+
+      &:nth-child(even) {
+        background-color: #282828; // четные
+      }
 
       .user {
         display: flex;
@@ -215,12 +223,14 @@
         }
 
         .nickname {
+          margin-left: 5px;
           font-weight: bold;
+          color: #88c0d0;
         }
       }
 
       .message {
-
+        margin-top: 5px;
       }
     }
   }
@@ -522,4 +532,24 @@
 .fade-leave-to {
   opacity: 0;
   transform: translateY(5px);
+}
+
+.hover-card {
+  position: absolute;
+  background: #222;
+  color: #fff;
+  border-radius: 8px;
+  padding: 12px;
+  width: 220px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  z-index: 1000;
+  transition: opacity 0.2s, transform 0.2s;
+
+  &.hover-above {
+    transform-origin: bottom center;
+  }
+
+  &.hover-below {
+    transform-origin: top center;
+  }
 }

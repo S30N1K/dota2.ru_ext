@@ -77,6 +77,7 @@ export const usersOffline = ref<UserChat[]>([])
 export const messages = ref<ChatMessage[]>([])
 export const unreadMessagesCount = ref<number>(0)
 export const quoteMessage = ref<ChatMessage | null>(null)
+export const unreadNotificationsCount = ref<number>(0)
 
 // ================================
 // 🚀  ПОДКЛЮЧЕНИЕ
@@ -144,6 +145,10 @@ socket.on("disconnect", () => {
 
 socket.on("connect_error", () => {
     socketStatus.value = "error"
+})
+
+socket.on("unreadNotificationsCount", (data: {count: number}) => {
+    unreadNotificationsCount.value = data.count
 })
 
 // После успешной авторизации

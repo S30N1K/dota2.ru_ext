@@ -6,6 +6,7 @@ export interface User {
     avatar: string
     token: string
     signature: string
+    registration: Date
     relationType: UserRelation
 }
 
@@ -15,9 +16,10 @@ export interface SearchUser {
     name: string
     name_parsed: string
     avatar: string
+    registration: Date
 }
 
-export interface UserChat extends Pick<User, "id" | "nickname" | "avatar"> {
+export interface UserChat extends Pick<User, "id" | "nickname" | "avatar" | "registration"> {
 }
 
 export interface UserIgnoreList extends Pick<User, "id" | "nickname"> {
@@ -33,7 +35,7 @@ export interface UserInfo extends Pick<User, "id" | "nickname"> {
 
 export interface ChatMessage {
     id: number
-    user: Pick<User, "id" | "nickname" | "avatar">
+    user: UserChat
     message: string
     time: string | Date
     pingMe: boolean
